@@ -145,16 +145,18 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	// Flag to specify config file to be used.
-	rootCmd.PersistentFlags().StringVar(
+	rootCmd.PersistentFlags().StringVarP(
 		&cfgFile,
 		"config",
+		"c",
 		"",
 		"config file (default is $HOME/.herdstat.yaml)")
 
 	// Flag to enable verbose output
 	const verboseFlag = "verbose"
-	rootCmd.PersistentFlags().Bool(
+	rootCmd.PersistentFlags().BoolP(
 		verboseFlag,
+		"v",
 		false,
 		"enable verbose output")
 	if err := viper.BindPFlag(verboseCfgKey, rootCmd.PersistentFlags().Lookup(verboseFlag)); err != nil {
@@ -163,8 +165,9 @@ func init() {
 
 	// Flag to specify repositories to analyze
 	const repositoriesFlag = "repositories"
-	rootCmd.PersistentFlags().StringSlice(
+	rootCmd.PersistentFlags().StringSliceP(
 		repositoriesFlag,
+		"r",
 		nil,
 		"repositories to analyze",
 	)

@@ -219,8 +219,9 @@ func init() {
 
 	// Flag to control output minification
 	const minifyOutputFlag = "minify"
-	contributionGraphCmd.Flags().Bool(
+	contributionGraphCmd.Flags().BoolP(
 		minifyOutputFlag,
+		"m",
 		true,
 		"Flag to toggle SVG document minification")
 	if err := viper.BindPFlag(minifyOutputCfgKey, contributionGraphCmd.Flags().Lookup(minifyOutputFlag)); err != nil {
@@ -228,8 +229,9 @@ func init() {
 	}
 
 	const outputFilenameFlag = "output-filename"
-	contributionGraphCmd.Flags().String(
+	contributionGraphCmd.Flags().StringP(
 		outputFilenameFlag,
+		"o",
 		"contribution-graph.svg",
 		"The name of the generated SVG file")
 	if err := viper.BindPFlag(filenameCfgKey, contributionGraphCmd.Flags().Lookup(outputFilenameFlag)); err != nil {
