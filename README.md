@@ -27,9 +27,7 @@ Now you can execute `herdstat` on the _herdstat_ GitHub organization using
 
 ```shell
 docker rm herdstat-dev || true
-docker run --name herdstat-dev --security-opt="apparmor=unconfined" \
-  --cap-add=SYS_PTRACE -p 40000:40000 -it herdstat-dev \
-  /herdstat contribution-graph herdstat
+docker run --name herdstat-dev -it herdstat-dev /herdstat contribution-graph herdstat
 ```
 
 To extract the generated contribution graph invoke
