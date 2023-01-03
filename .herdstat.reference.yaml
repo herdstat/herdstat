@@ -10,6 +10,10 @@
 # Toggle for verbose output
 verbose: false
 
+# Repositories to analyze. Can be either a plain 'owner' or 'owner/repository' combination.
+repositories:
+  - herdstat
+
 # Configuration for the 'contribution-graph' command
 contribution-graph:
 

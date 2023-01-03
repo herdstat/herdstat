@@ -9,12 +9,9 @@ package cmd
 
 import (
 	"bytes"
-	"context"
 	"database/sql"
 	"encoding/xml"
-	"errors"
 	"fmt"
-	"github.com/google/go-github/v48/github"
 	"github.com/mattn/go-sqlite3"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/repeale/fp-go"
@@ -28,7 +25,6 @@ import (
 	"net/url"
 	"os"
 	"reflect"
-	"regexp"
 	"strings"
 	"time"
 )
@@ -55,33 +51,12 @@ func init() {
 		})
 }
 
-// Matches GitHub owner or repository identifiers (see
-// https://github.com/dead-claudia/github-limits for details)
-var ownerOrRepoIdPattern = regexp.MustCompile(fmt.Sprintf("([A-Za-z0-9-]+)(/([A-Za-z0-9_\\.-]+))?"))
-
-// isValidOwnerOrRepoId returns true iff the provided string is a valid GitHub
-// owner or repository identifier.
-func isValidOwnerOrRepoId(s string) bool {
-	return ownerOrRepoIdPattern.MatchString(s)
-}
-
 // contributionGraphCmd represents the contribution-graph command
 var contributionGraphCmd = &cobra.Command{
 	Use:   "contribution-graph",
 	Short: "Generates a GitHub-style heatmap to visualize contributions",
-	Long:  ``,
-	Args: func(cmd *cobra.Command, args []string) error {
-		if err := cobra.MinimumNArgs(1)(cmd, args); err != nil {
-			return err
-		}
-		for _, arg := range args {
-			if !isValidOwnerOrRepoId(arg) {
-				return fmt.Errorf("'%s' is not a valid GitHub organization/user or repository identifier", arg)
-			}
-		}
-		return nil
-	},
-	RunE: run,
+	Args:  cobra.NoArgs,
+	RunE:  run,
 }
 
 // tmplHelpers provides helpers for template processing
@@ -134,39 +109,6 @@ func createCommitCountQuery(repos map[url.URL]bool) (string, error) {
 	return query, nil
 }
 
-// addRepository adds the URL built from the given owner and repository to the
-// given set of URLs.
-func addRepository(owner string, repo string, urls *map[url.URL]bool) error {
-	repoUrl, err := url.Parse(fmt.Sprintf("https://github.com/%s/%s", owner, repo))
-	if err != nil {
-		return err
-	}
-	if _, ok := (*urls)[*repoUrl]; ok {
-		logger.Warnw("Repository is a duplicate - ignoring", "Repository URL", repoUrl.String())
-	} else {
-		(*urls)[*repoUrl] = true
-	}
-	return nil
-}
-
-// addOwnerRepositories fetches all repositories of the given owner and adds
-// their URL to the given set of URLs.
-func addOwnerRepositories(owner string, urls *map[url.URL]bool) error {
-	client := github.NewClient(nil)
-	opt := &github.RepositoryListByOrgOptions{Type: "public"}
-	repos, _, err := client.Repositories.ListByOrg(context.Background(), owner, opt)
-	logger.Infow("Fetched repositories from owner", "Owner", owner, "Count", len(repos))
-	if err != nil {
-		return err
-	}
-	for _, repo := range repos {
-		if err := addRepository(owner, *repo.Name, urls); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func run(cmd *cobra.Command, args []string) error {
 	db, err := sql.Open(DbDriverName, ":memory:")
 	if err != nil {
@@ -174,32 +116,13 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 	defer db.Close()
 
-	urls := make(map[url.URL]bool)
-	for _, arg := range args {
-		matches := ownerOrRepoIdPattern.FindStringSubmatch(arg)
-		if matches == nil {
-			return fmt.Errorf("'%s' is not a valid owner or owner/repository", arg)
-		}
-		owner := matches[1]
-		if matches[3] == "" {
-			err := addOwnerRepositories(owner, &urls)
-			if err != nil {
-				return fmt.Errorf("failed to collect repositories from owner '%s': %w", owner, err)
-			}
-		} else {
-			repository := matches[3]
-			err := addRepository(owner, repository, &urls)
-			if err != nil {
-				return fmt.Errorf("failed to add repository '%s': %w", repository, err)
-			}
-		}
+	urls, err := resolveRepositoryURLs()
+	if err != nil {
+		return err
 	}
-
 	l := len(urls)
 	var s string
 	switch l {
-	case 0:
-		return errors.New("at least one repository must be provided")
 	case 1:
 		s = "repository"
 	default:

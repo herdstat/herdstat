@@ -8,16 +8,22 @@
 package cmd
 
 import (
+	"context"
+	"errors"
 	"fmt"
-	"go.uber.org/zap"
-	"os"
-
+	"github.com/google/go-github/v48/github"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
+	"net/url"
+	"os"
+	"regexp"
 )
 
 // Configuration keys for the root command
 const (
+	// Repositories to analyze
+	repositoriesCfgKey = "repositories"
 	// Toggle for verbose output
 	verboseCfgKey = "verbose"
 )
@@ -67,6 +73,73 @@ func Execute() {
 	}
 }
 
+// Matches GitHub owner or repository identifiers (see
+// https://github.com/dead-claudia/github-limits for details)
+var ownerOrRepoIdPattern = regexp.MustCompile(fmt.Sprintf("([A-Za-z0-9-]+)(/([A-Za-z0-9_\\.-]+))?"))
+
+// addRepository adds the URL built from the given owner and repository to the
+// given set of URLs.
+func addRepository(owner string, repo string, urls *map[url.URL]bool) error {
+	repoUrl, err := url.Parse(fmt.Sprintf("https://github.com/%s/%s", owner, repo))
+	if err != nil {
+		return err
+	}
+	if _, ok := (*urls)[*repoUrl]; ok {
+		logger.Warnw("Repository is a duplicate - ignoring", "Repository URL", repoUrl.String())
+	} else {
+		(*urls)[*repoUrl] = true
+	}
+	return nil
+}
+
+// addOwnerRepositories fetches all repositories of the given owner and adds
+// their URL to the given set of URLs.
+func addOwnerRepositories(owner string, urls *map[url.URL]bool) error {
+	client := github.NewClient(nil)
+	opt := &github.RepositoryListByOrgOptions{Type: "public"}
+	repos, _, err := client.Repositories.ListByOrg(context.Background(), owner, opt)
+	logger.Infow("Fetched repositories from owner", "Owner", owner, "Count", len(repos))
+	if err != nil {
+		return err
+	}
+	for _, repo := range repos {
+		if err := addRepository(owner, *repo.Name, urls); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// resolveRepositoryURLs computes the repositories to be analyzed. Performs
+// expansion of owner entries and deduplication.
+func resolveRepositoryURLs() (map[url.URL]bool, error) {
+	repos := viper.GetStringSlice(repositoriesCfgKey)
+	urls := make(map[url.URL]bool)
+	for _, repo := range repos {
+		matches := ownerOrRepoIdPattern.FindStringSubmatch(repo)
+		if matches == nil {
+			return nil, fmt.Errorf("'%s' is not a valid owner or owner/repository", repo)
+		}
+		owner := matches[1]
+		if matches[3] == "" {
+			err := addOwnerRepositories(owner, &urls)
+			if err != nil {
+				return nil, fmt.Errorf("failed to collect repositories from owner '%s': %w", owner, err)
+			}
+		} else {
+			repository := matches[3]
+			err := addRepository(owner, repository, &urls)
+			if err != nil {
+				return nil, fmt.Errorf("failed to add repository '%s': %w", repository, err)
+			}
+		}
+	}
+	if len(urls) == 0 {
+		return nil, errors.New("resolving repositories resulted in empty set")
+	}
+	return urls, nil
+}
+
 // Initialize the root command.
 func init() {
 	cobra.OnInitialize(initConfig)
@@ -79,10 +152,25 @@ func init() {
 		"config file (default is $HOME/.herdstat.yaml)")
 
 	// Flag to enable verbose output
+	const verboseFlag = "verbose"
 	rootCmd.PersistentFlags().Bool(
-		verboseCfgKey,
+		verboseFlag,
 		false,
 		"enable verbose output")
+	if err := viper.BindPFlag(verboseCfgKey, rootCmd.PersistentFlags().Lookup(verboseFlag)); err != nil {
+		logger.Fatalw("Can't bind to flag", "Flag", verboseFlag, "Error", err)
+	}
+
+	// Flag to specify repositories to analyze
+	const repositoriesFlag = "repositories"
+	rootCmd.PersistentFlags().StringSlice(
+		repositoriesFlag,
+		nil,
+		"repositories to analyze",
+	)
+	if err := viper.BindPFlag(repositoriesCfgKey, rootCmd.PersistentFlags().Lookup(repositoriesFlag)); err != nil {
+		logger.Fatalw("Can't bind to flag", "Flag", repositoriesFlag, "Error", err)
+	}
 
 }
 
@@ -99,6 +187,6 @@ func initConfig() {
 	}
 	viper.AutomaticEnv()
 	if err := viper.ReadInConfig(); err == nil {
-		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
+		_, _ = fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
 	}
 }
