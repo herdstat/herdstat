@@ -46,7 +46,7 @@ func init() {
 	sql.Register(DbDriverName,
 		&sqlite3.SQLiteDriver{
 			Extensions: []string{
-				"./libmergestat",
+				"libmergestat",
 			},
 		})
 }

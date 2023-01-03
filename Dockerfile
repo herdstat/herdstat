@@ -39,7 +39,7 @@ FROM ubuntu:22.10
 
 RUN apt-get update && apt-get install -y ca-certificates
 
-COPY --from=build /go/mergestat-lite/.build/libmergestat.so /
+COPY --from=build /go/mergestat-lite/.build/libmergestat.so /usr/lib/
 COPY --from=build /app/herdstat /herdstat
 COPY .herdstat.reference.yaml /
 COPY --from=build /go/bin/dlv /
