@@ -44,7 +44,7 @@ To remote debug `herdstat` running in a docker container invoke
 docker rm herdstat-dev || true
 docker run --name herdstat-dev --security-opt="apparmor=unconfined" \
   --cap-add=SYS_PTRACE -p 40000:40000 -it herdstat-dev \
-  "/dlv --listen=:40000 --headless=true --api-version=2 --accept-multiclient exec /herdstat -- --verbose contribution-graph herdstat"
+  /dlv --listen=:40000 --headless=true --api-version=2 --accept-multiclient exec /herdstat -- --verbose contribution-graph herdstat
 ```
 
 You can then connect via your IDE or from the commandline on port 40000.
