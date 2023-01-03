@@ -1,0 +1,20 @@
+#
+# Copyright (c) 2023 - for information on the respective copyright owner
+# see the NOTICE file and/or the repository https://github.com/herdstat/herdstat.
+#
+# SPDX-License-Identifier: MIT
+#
+
+# Reference herdstat configuration file. Given values are the default values.
+
+# Toggle for verbose output
+verbose: false
+
+# Configuration for the 'contribution-graph' command
+contribution-graph:
+
+  # The name of the output SVG file
+  filename: contribution-graph.svg
+
+  # Whether the output SVG should be minified
+  minify: true

@@ -33,12 +33,12 @@ import (
 	"time"
 )
 
-var (
+// Configuration keys for the contribution-graph command
+const (
 	// Whether the output SVG should be minified
-	minifyOutput bool
-
+	minifyOutputCfgKey = "contribution-graph.minify"
 	// The name of the output SVG file
-	outputFilename string
+	filenameCfgKey = "contribution-graph.filename"
 )
 
 // DbDriverName is the name of the database driver configured to use the
@@ -266,12 +266,14 @@ func run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("flushing SVG encoder failed: %w", err)
 	}
 
-	f, err := os.Create(outputFilename)
+	filename := viper.GetString(filenameCfgKey)
+	f, err := os.Create(filename)
 	if err != nil {
 		return fmt.Errorf("can't create output file: %w", err)
 	}
 	defer f.Close()
-	if minifyOutput {
+	if viper.GetBool(minifyOutputCfgKey) {
+		cmd.Printf("Minifying output\n")
 		m := minify.New()
 		m.AddFunc("image/svg+xml", svg.Minify)
 		if err := m.Minify("image/svg+xml", f, &buf); err != nil {
@@ -283,7 +285,7 @@ func run(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("writing SVG to file failed: %w", err)
 		}
 	}
-	cmd.Printf("Contribution graph written to '%s'", outputFilename)
+	cmd.Printf("Contribution graph written to '%s'\n", filename)
 
 	return nil
 }
@@ -293,23 +295,21 @@ func init() {
 	rootCmd.AddCommand(contributionGraphCmd)
 
 	// Flag to control output minification
-	const minifyFlag = "minify"
-	contributionGraphCmd.Flags().BoolVar(
-		&minifyOutput,
-		"minify",
+	const minifyOutputFlag = "minify"
+	contributionGraphCmd.Flags().Bool(
+		minifyOutputFlag,
 		true,
 		"Flag to toggle SVG document minification")
-	if err := viper.BindPFlag(minifyFlag, contributionGraphCmd.Flags().Lookup("minify")); err != nil {
-		logger.Fatalw("Can't bind to flag", "Flag", minifyFlag, "Error", err)
+	if err := viper.BindPFlag(minifyOutputCfgKey, contributionGraphCmd.Flags().Lookup(minifyOutputFlag)); err != nil {
+		logger.Fatalw("Can't bind to flag", "Flag", minifyOutputFlag, "Error", err)
 	}
 
 	const outputFilenameFlag = "output-filename"
-	contributionGraphCmd.Flags().StringVar(
-		&outputFilename,
+	contributionGraphCmd.Flags().String(
 		outputFilenameFlag,
 		"contribution-graph.svg",
 		"The name of the generated SVG file")
-	if err := viper.BindPFlag(outputFilenameFlag, contributionGraphCmd.Flags().Lookup("output-filename")); err != nil {
+	if err := viper.BindPFlag(filenameCfgKey, contributionGraphCmd.Flags().Lookup(outputFilenameFlag)); err != nil {
 		logger.Fatalw("Can't bind to flag", "Flag", outputFilenameFlag, "Error", err)
 	}
 }

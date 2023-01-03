@@ -16,13 +16,17 @@ import (
 	"github.com/spf13/viper"
 )
 
-var (
-	// The configuration file used to initialize flags and parameters
-	cfgFile string
-
-	// Flag to enable verbose output
-	verbose bool
+// Configuration keys for the root command
+const (
+	// Toggle for verbose output
+	verboseCfgKey = "verbose"
 )
+
+var (
+	// The file to read the configuration from
+	cfgFile string
+)
+
 var logger *zap.SugaredLogger
 
 // rootCmd represents the base command when called without any subcommands
@@ -37,6 +41,7 @@ var rootCmd = &cobra.Command{
 // configureLogger configures the logging subsystem
 func configureLogger() *zap.SugaredLogger {
 	var config zap.Config
+	verbose := viper.GetBool(verboseCfgKey)
 	if verbose {
 		config = zap.NewDevelopmentConfig()
 	} else {
@@ -74,9 +79,8 @@ func init() {
 		"config file (default is $HOME/.herdstat.yaml)")
 
 	// Flag to enable verbose output
-	rootCmd.PersistentFlags().BoolVar(
-		&verbose,
-		"verbose",
+	rootCmd.PersistentFlags().Bool(
+		verboseCfgKey,
 		false,
 		"enable verbose output")
 
