@@ -268,7 +268,7 @@ func (g *ContributionGraph) renderWeekdayAxis(e *xml.Encoder) error {
 		e,
 		image.Point{
 			X: 40,
-			Y: 12 + 9 + 20,
+			Y: 12 + 9 + 30,
 		},
 		legendTextColor,
 		end,
@@ -282,7 +282,7 @@ func (g *ContributionGraph) renderWeekdayAxis(e *xml.Encoder) error {
 		e,
 		image.Point{
 			X: 40,
-			Y: 36 + 9 + 20,
+			Y: 36 + 9 + 30,
 		},
 		legendTextColor,
 		end,
@@ -296,7 +296,7 @@ func (g *ContributionGraph) renderWeekdayAxis(e *xml.Encoder) error {
 		e,
 		image.Point{
 			X: 40,
-			Y: 60 + 9 + 20,
+			Y: 60 + 9 + 30,
 		},
 		legendTextColor,
 		end,

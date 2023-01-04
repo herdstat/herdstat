@@ -21,3 +21,6 @@ herdstat
 
 # GoLand
 .idea
+
+# herdstat
+contribution-graph.svg
