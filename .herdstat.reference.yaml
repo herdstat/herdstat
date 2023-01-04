@@ -17,6 +17,9 @@ repositories:
 # Configuration for the 'contribution-graph' command
 contribution-graph:
 
+  # Date of last date to be visualized (supports many date formats)
+  until: 2023-10-30
+
   # The name of the output SVG file
   filename: contribution-graph.svg
 

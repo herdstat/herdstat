@@ -12,6 +12,7 @@ import (
 	"database/sql"
 	"encoding/xml"
 	"fmt"
+	"github.com/araddon/dateparse"
 	"github.com/mattn/go-sqlite3"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/repeale/fp-go"
@@ -35,6 +36,8 @@ const (
 	minifyOutputCfgKey = "contribution-graph.minify"
 	// The name of the output SVG file
 	filenameCfgKey = "contribution-graph.filename"
+	// The date of the last day to visualize
+	untilCfgKey = "until"
 )
 
 // DbDriverName is the name of the database driver configured to use the
@@ -109,6 +112,17 @@ func createCommitCountQuery(repos map[url.URL]bool) (string, error) {
 	return query, nil
 }
 
+// getUntilDate retrieves the "until" parameter as a time.Time instance by
+// parsing the respective configuration entry
+func getUntilDate() (time.Time, error) {
+	s := viper.GetString(untilCfgKey)
+	date, err := dateparse.ParseStrict(s)
+	if err != nil {
+		return time.Time{}, err
+	}
+	return date, nil
+}
+
 func run(cmd *cobra.Command, args []string) error {
 	db, err := sql.Open(DbDriverName, ":memory:")
 	if err != nil {
@@ -142,7 +156,10 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 	defer rows.Close()
 
-	lastDay := time.Date(2022, 12, 30, 0, 0, 0, 0, time.UTC)
+	lastDay, err := getUntilDate()
+	if err != nil {
+		return fmt.Errorf("parsing 'until' parameter '%s' failed: %w", lastDay, err)
+	}
 	data := make([]ContributionRecord, 52*7)
 	for i := 0; i < 52*7; i++ {
 		data[i] = ContributionRecord{
@@ -216,6 +233,17 @@ func run(cmd *cobra.Command, args []string) error {
 // Initialize the 'contribution-graph' command.
 func init() {
 	rootCmd.AddCommand(contributionGraphCmd)
+
+	// Flag to set the last day for which data is visualized
+	const untilFlag = "until"
+	contributionGraphCmd.Flags().StringP(
+		untilFlag,
+		"u",
+		time.Now().Format("2006-01-02"),
+		"date of last day for which data is visualized")
+	if err := viper.BindPFlag(untilCfgKey, contributionGraphCmd.Flags().Lookup(untilFlag)); err != nil {
+		logger.Fatalw("Can't bind to flag", "Flag", untilFlag, "Error", err)
+	}
 
 	// Flag to control output minification
 	const minifyOutputFlag = "minify"
