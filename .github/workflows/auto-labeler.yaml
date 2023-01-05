@@ -1,0 +1,19 @@
+#
+# Copyright (c) 2023 - for information on the respective copyright owner
+# see the NOTICE file and/or the repository https://github.com/herdstat/herdstat.
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: 'Auto Labeler'
+on:
+  # Allow workflow to be triggered manually
+  workflow_dispatch:
+  issues:
+    types:
+      - reopened
+      - opened
+jobs:
+  # re-usable workflow (see https://docs.github.com/en/actions/using-workflows/reusing-workflows)
+  auto-labeling:
+    uses: herdstat/.github/.github/workflows/auto-labeler.yaml@main

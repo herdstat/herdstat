@@ -1,0 +1,18 @@
+#
+# Copyright (c) 2023 - for information on the respective copyright owner
+# see the NOTICE file and/or the repository https://github.com/herdstat/herdstat.
+#
+# SPDX-License-Identifier: MIT
+#
+
+name: 'Flag issues and PRs as stale/rotten'
+on:
+  # Allow workflow to be triggered manually
+  workflow_dispatch:
+  # Trigger at midnight each day
+  schedule:
+    - cron: '0 0 * * *'
+jobs:
+  # re-usable workflow (see https://docs.github.com/en/actions/using-workflows/reusing-workflows)
+  stale-rotten-handling:
+    uses: herdstat/.github/.github/workflows/stale.yaml@main
