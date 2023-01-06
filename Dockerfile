@@ -10,8 +10,11 @@
 # Start by building the application.
 FROM golang:1.19 as build
 
+# Build variable to control environment. Set to either "debug" or leave undefined.
+ARG ENV
+
 # Build Delve
-RUN go install github.com/go-delve/delve/cmd/dlv@v1.20.1
+RUN if [ "$ENV" = "debug" ]; then go install github.com/go-delve/delve/cmd/dlv@v1.20.1; fi
 
 # Build libmergestat.so
 RUN apt-get update && apt-get -y install cmake libssl-dev
@@ -27,21 +30,12 @@ COPY go.mod go.sum /app/
 COPY main.go /app/
 WORKDIR /app
 
-# download Go modules and dependencies
-RUN go mod download
-
 # compile application
-RUN go build -gcflags="all=-N -l"
+RUN go build
 
 # Now copy it into our base image.
-#FROM gcr.io/distroless/static-debian11
-FROM ubuntu:22.10
-
-RUN apt-get update && apt-get install -y ca-certificates
+FROM gcr.io/distroless/base-debian11
 
 COPY --from=build /go/mergestat-lite/.build/libmergestat.so /usr/lib/
-COPY --from=build /app/herdstat /herdstat
-COPY .herdstat.reference.yaml /
-COPY --from=build /go/bin/dlv /
+COPY --from=build /app/herdstat /go/bin/dlv* /
 
-EXPOSE 40000

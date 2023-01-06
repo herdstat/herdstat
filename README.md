@@ -39,7 +39,13 @@ docker cp $(docker ps -aqf "name=herdstat-dev"):/contribution-graph.svg .
 
 ## Debug
 
-To remote debug `herdstat` running in a docker container invoke
+To remote debug `herdstat` build the image with the `ENV` build variable set to `debug`
+
+```shell
+docker build  -t herdstat-dev --build-arg ENV=debug .
+```
+
+and start a container using
 
 ```shell
 docker rm herdstat-dev || true
