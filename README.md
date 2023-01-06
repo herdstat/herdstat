@@ -28,7 +28,7 @@ Now you can execute `herdstat` on the _herdstat_ GitHub organization using
 
 ```shell
 docker rm herdstat-dev || true
-docker run --name herdstat-dev -it herdstat-dev /herdstat contribution-graph herdstat
+docker run --name herdstat-dev -it herdstat-dev /herdstat -r herdstat contribution-graph
 ```
 
 To extract the generated contribution graph invoke
@@ -45,7 +45,7 @@ To remote debug `herdstat` running in a docker container invoke
 docker rm herdstat-dev || true
 docker run --name herdstat-dev --security-opt="apparmor=unconfined" \
   --cap-add=SYS_PTRACE -p 40000:40000 -it herdstat-dev \
-  /dlv --listen=:40000 --headless=true --api-version=2 --accept-multiclient exec /herdstat -- --verbose contribution-graph herdstat
+  /dlv --listen=:40000 --headless=true --api-version=2 --accept-multiclient exec /herdstat -- --verbose -r herdstat contribution-graph
 ```
 
 You can then connect via your IDE or from the commandline on port 40000.
