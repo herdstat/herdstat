@@ -2,9 +2,9 @@
 
 [![stability-wip](https://img.shields.io/badge/stability-wip-lightgrey.svg)](https://github.com/mkenney/software-guides/blob/master/STABILITY-BADGES.md#work-in-progress)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 
-> **Warning**
-> `herdstat` is work in progress and neither feature complete nor tested thoroughly.
+> **Warning** `herdstat` is work in progress and neither feature complete nor tested thoroughly.
 
 `herdstat` is a tool for analyzing and visualizing metrics of Open Source projects hosted on GitHub. As of today its
 functionality is limited to generate GitHub-style contribution graphs for individual repositories or whole GitHub
@@ -28,12 +28,11 @@ Alternatively, you can use the [`herdstat` GitHub action](https://github.com/her
 
 ## Configuration
 
-`herdstat` can be configured either by providing arguments to the CLI or by means of a configuration file via the global 
+`herdstat` can be configured either by providing arguments to the CLI or by means of a configuration file via the global
 `--config` CLI flag. The list of available configuration options is summarized in the following table:
 
-
 | Aspect              | Subcommend         | Description                                                                                                           | CLI Flag                  | Configuration Path            |
-|---------------------|--------------------|-----------------------------------------------------------------------------------------------------------------------|---------------------------|-------------------------------|
+| ------------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------- | ------------------------- | ----------------------------- |
 | Configuration       | -                  | Path to a configuration file (see [reference](.herdstat.reference.yaml)).                                             | `--config`, `-c`          | -                             |
 | Source Repositories | -                  | The comma-delimited list of GitHub repositories to analyze. May be either single repositories or whole organizations. | `--repositories`, `-r`    | `repositories`                |
 | Verbosity           | -                  | Controls the verbosity of the `herdstat` CLI.                                                                         | `--verbose`, `-v`         | `verbose`                     |

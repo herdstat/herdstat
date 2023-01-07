@@ -155,12 +155,12 @@ func (g *ContributionGraph) Render(e *xml.Encoder) error {
 		style := `
 svg {
 	font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif;
-} 
+}
 
-.tooltip { 
-	visibility: hidden; 
+.tooltip {
+	visibility: hidden;
 	transition: opacity 0.3s;
-} 
+}
 
 .day:hover + .tooltip {
 	visibility: visible;
