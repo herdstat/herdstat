@@ -7,7 +7,7 @@
 > `herdstat` is work in progress and neither feature complete nor tested thoroughly.
 
 `herdstat` is a tool for analyzing and visualizing metrics of Open Source projects hosted on GitHub. As of today its
-functionality is limited to generate GitHub-style contribution graphs for individual repository or complete GitHub
+functionality is limited to generate GitHub-style contribution graphs for individual repositories or whole GitHub
 organisations.
 
 ## Namesake
@@ -16,22 +16,47 @@ organisations.
 which is a well-known Linux command line utility that displays detailed information about files. So replacing _file_
 with _open source community_ (= _herd_) does the trick in understanding why we have chosen that name.
 
-## Build
+## Usage
 
-The easiest way to build `herdstat` is to use Docker. To build the image invoke
+You can execute `herdstat` using Docker via
+
+```shell
+docker run herdstat/herdstat /herdstat -r herdstat contribution-graph
+```
+
+Alternatively, you can use the [`herdstat` GitHub action](https://github.com/herdstat/herdstat-action).
+
+## Configuration
+
+`herdstat` can be configured either by providing arguments to the CLI or by means of a configuration file via the global 
+`--config` CLI flag. The list of available configuration options is summarized in the following table:
+
+
+| Aspect              | Subcommend         | Description                                                                                                           | CLI Flag                  | Configuration Path            |
+|---------------------|--------------------|-----------------------------------------------------------------------------------------------------------------------|---------------------------|-------------------------------|
+| Configuration       | -                  | Path to a configuration file (see [reference](.herdstat.reference.yaml)).                                             | `--config`, `-c`          | -                             |
+| Source Repositories | -                  | The comma-delimited list of GitHub repositories to analyze. May be either single repositories or whole organizations. | `--repositories`, `-r`    | `repositories`                |
+| Verbosity           | -                  | Controls the verbosity of the `herdstat` CLI.                                                                         | `--verbose`, `-v`         | `verbose`                     |
+| Analysis Period     | contribution-graph | Controls the period of time to analyze by means of the last day of the 52 week period to look at.                     | `--until`, `-u`           | `contribution-graph/until`    |
+| Minification        | contribution-graph | Whether to minify the generated SVG.                                                                                  | `--minify`, `-m`          | `contribution-graph/minify`   |
+| Output Filename     | contribution-graph | The name of the file used to store the generated contribution graph.                                                  | `--output-filename`, `-o` | `contribution-graph/filename` |
+
+## Building from Source
+
+The easiest way to build `herdstat` from its sources is to use Docker. To build the image invoke
 
 ```shell
 docker build . -t herdstat-dev
 ```
 
-Now you can execute `herdstat` on the _herdstat_ GitHub organization using
+You can execute `herdstat` on the _herdstat_ GitHub organization using
 
 ```shell
 docker rm herdstat-dev || true
 docker run --name herdstat-dev -it herdstat-dev /herdstat -r herdstat contribution-graph
 ```
 
-To extract the generated contribution graph invoke
+To extract the generated contribution graph from the Docker container invoke
 
 ```shell
 docker cp $(docker ps -aqf "name=herdstat-dev"):/contribution-graph.svg .
