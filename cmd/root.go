@@ -15,15 +15,23 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
+	"golang.org/x/oauth2"
+	"net/http"
 	"net/url"
 	"os"
 	"regexp"
+	"strings"
 )
 
 // Configuration keys for the root command
 const (
+
 	// Repositories to analyze
 	repositoriesCfgKey = "repositories"
+
+	// Token used to access the GitHub API
+	gitHubTokenCfgKey = "github-token"
+
 	// Toggle for verbose output
 	verboseCfgKey = "verbose"
 )
@@ -95,7 +103,19 @@ func addRepository(owner string, repo string, urls *map[url.URL]bool) error {
 // addOwnerRepositories fetches all repositories of the given owner and adds
 // their URL to the given set of URLs.
 func addOwnerRepositories(owner string, urls *map[url.URL]bool) error {
-	client := github.NewClient(nil)
+	var httpClient *http.Client
+	if viper.IsSet(gitHubTokenCfgKey) {
+		token := viper.GetString(gitHubTokenCfgKey)
+		ts := oauth2.StaticTokenSource(
+			&oauth2.Token{AccessToken: token},
+		)
+		ctx := context.Background()
+		httpClient = oauth2.NewClient(ctx, ts)
+		logger.Debug("GitHub token provided - making authenticated API calls")
+	} else {
+		logger.Debug("No GitHub token provided - making anonymous API calls")
+	}
+	client := github.NewClient(httpClient)
 	opt := &github.RepositoryListByOrgOptions{Type: "public"}
 	repos, _, err := client.Repositories.ListByOrg(context.Background(), owner, opt)
 	logger.Infow("Fetched repositories from owner", "Owner", owner, "Count", len(repos))
@@ -175,6 +195,18 @@ func init() {
 		logger.Fatalw("Can't bind to flag", "Flag", repositoriesFlag, "Error", err)
 	}
 
+	// Flag to set the access token used for making GitHub API calls
+	const gitHubTokenFlag = "github-token"
+	rootCmd.PersistentFlags().StringP(
+		gitHubTokenFlag,
+		"t",
+		"",
+		"token for accessing the GitHub API",
+	)
+	if err := viper.BindPFlag(gitHubTokenCfgKey, rootCmd.PersistentFlags().Lookup(gitHubTokenFlag)); err != nil {
+		logger.Fatalw("Can't bind to flag", "Flag", gitHubTokenFlag, "Error", err)
+	}
+
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -188,6 +220,8 @@ func initConfig() {
 		viper.SetConfigType("yaml")
 		viper.SetConfigName(".herdstat")
 	}
+	replacer := strings.NewReplacer("-", "_")
+	viper.SetEnvKeyReplacer(replacer)
 	viper.AutomaticEnv()
 	if err := viper.ReadInConfig(); err == nil {
 		_, _ = fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())

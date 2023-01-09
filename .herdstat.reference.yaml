@@ -14,6 +14,10 @@ verbose: false
 repositories:
   - herdstat
 
+# Token used to access the GitHub API. If not defined requests will be made anonymously and rate limits might make
+# requests fail.
+github-token: ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
 # Configuration for the 'contribution-graph' command
 contribution-graph:
 
