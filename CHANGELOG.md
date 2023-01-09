@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/herdstat/herdstat/compare/v0.2.0...v0.3.0) (2023-01-09)
+
+
+### Features
+
+* introduce parameter to set GitHub API token ([9557269](https://github.com/herdstat/herdstat/commit/9557269d10eda07efbef353e2f7c68520f761ae7))
+
 ## [0.2.0](https://github.com/herdstat/herdstat/compare/v0.1.0...v0.2.0) (2023-01-06)
 
 
