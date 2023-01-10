@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/herdstat/herdstat/compare/v0.4.0...v0.4.1) (2023-01-10)
+
+
+### Bug Fixes
+
+* add non-breaking space to contribution count labels ([f4f5fef](https://github.com/herdstat/herdstat/commit/f4f5fefc0082faaed280e9c85cb178e159289903))
+
 ## [0.4.0](https://github.com/herdstat/herdstat/compare/v0.3.1...v0.4.0) (2023-01-10)
 
 
