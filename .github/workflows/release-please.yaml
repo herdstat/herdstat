@@ -20,3 +20,4 @@ jobs:
           package-name: herdstat
           bump-minor-pre-major: true
           signoff: "Sven Trieflinger <sven@trieflinger.com>"
+          token: ${{ secrets.RELEASE_PAT }}
