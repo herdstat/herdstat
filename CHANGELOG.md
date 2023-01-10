@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/herdstat/herdstat/compare/v0.3.0...v0.3.1) (2023-01-10)
+
+
+### Bug Fixes
+
+* use PAT for release please action to enable triggering dependent ([1b4a4d3](https://github.com/herdstat/herdstat/commit/1b4a4d3b252f94f1b534c35e5c3b1c957d5675f2))
+
 ## [0.3.0](https://github.com/herdstat/herdstat/compare/v0.2.0...v0.3.0) (2023-01-09)
 
 
