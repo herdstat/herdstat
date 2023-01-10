@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/herdstat/herdstat/compare/v0.3.1...v0.4.0) (2023-01-10)
+
+
+### Features
+
+* add label with overall number of contributions ([6c2a152](https://github.com/herdstat/herdstat/commit/6c2a152636727f1afa7aee0d0801b58d95916ea0))
+
 ## [0.3.1](https://github.com/herdstat/herdstat/compare/v0.3.0...v0.3.1) (2023-01-10)
 
 
