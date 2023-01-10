@@ -168,7 +168,43 @@ svg {
 		return e.EncodeToken(xml.CharData(style))
 	})
 
-	if err = g.renderWeekdayAxis(e); err != nil {
+	if err = g.renderContributionCellMatrix(e); err != nil {
+		return err
+	}
+
+	count := 0
+	for _, record := range g.Records {
+		count += record.Count
+	}
+	if err = g.renderOverallContributions(e, image.Point{
+		X: 65,
+		Y: 125,
+	}, count); err != nil {
+		return err
+	}
+
+	if err = g.renderLegend(e, image.Point{
+		X: 565,
+		Y: 125,
+	}); err != nil {
+		return err
+	}
+
+	// Write closing tag
+	err = e.EncodeToken(xml.EndElement{
+		Name: xml.Name{
+			Local: "svg",
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	return err
+}
+
+func (g *ContributionGraph) renderContributionCellMatrix(e *xml.Encoder) error {
+	if err := g.renderWeekdayAxis(e); err != nil {
 		return err
 	}
 
@@ -184,7 +220,7 @@ svg {
 		location = location.Add(image.Point{X: 12})
 		sliceCount = 52
 	}
-	err = translated(
+	err := translated(
 		e,
 		location,
 		func(e *xml.Encoder) error {
@@ -213,7 +249,7 @@ svg {
 
 			// Render heatmap
 			for i, slice := range slices {
-				err = translated(e, image.Point{X: 12 * i}, func(e *xml.Encoder) error {
+				err := translated(e, image.Point{X: 12 * i}, func(e *xml.Encoder) error {
 					return slice.render(e, false)
 				})
 				if err != nil {
@@ -223,7 +259,7 @@ svg {
 
 			// Render overlay
 			for i, slice := range slices {
-				err = translated(e, image.Point{X: 12 * i}, func(e *xml.Encoder) error {
+				err := translated(e, image.Point{X: 12 * i}, func(e *xml.Encoder) error {
 					return slice.render(e, true)
 				})
 				if err != nil {
@@ -238,26 +274,7 @@ svg {
 		return err
 	}
 
-	err = g.renderLegend(e, image.Point{
-		X: 565,
-		Y: 125,
-	})
-	if err != nil {
-		return err
-	}
-
-	// Write closing tag
-	err = e.EncodeToken(xml.EndElement{
-		Name: xml.Name{
-			Local: "svg",
-		},
-	})
-	if err != nil {
-		return err
-	}
-
-	return err
-
+	return nil
 }
 
 // renderWeekdayAxis renders the y-axis of the heatmap consisting of the days
@@ -307,6 +324,31 @@ func (g *ContributionGraph) renderWeekdayAxis(e *xml.Encoder) error {
 	}
 
 	return nil
+}
+
+// renderOverallContributions renders a label with the overall number of contributions.
+func (g *ContributionGraph) renderOverallContributions(e *xml.Encoder, location image.Point, count int) error {
+	return text(e, location.Add(image.Point{Y: 9}), legendTextColor, start, func(e *xml.Encoder) error {
+		err := nonEmptyElement(e, xml.StartElement{
+			Name: xml.Name{
+				Local: "tspan",
+			},
+			Attr: []xml.Attr{
+				{
+					Name: xml.Name{
+						Local: "font-weight",
+					},
+					Value: "800",
+				},
+			},
+		}, func(e *xml.Encoder) error {
+			return e.EncodeToken(xml.CharData(fmt.Sprintf("%d contributions ", count)))
+		})
+		if err != nil {
+			return nil
+		}
+		return e.EncodeToken(xml.CharData("in the last year"))
+	})
 }
 
 // renderLegend renders a legend for decoding contribution intensity
@@ -610,12 +652,12 @@ func (w weekSlice) renderTooltip(e *xml.Encoder, location image.Point, tipPositi
 						},
 					},
 				}, func(e *xml.Encoder) error {
-					return e.EncodeToken(xml.CharData(fmt.Sprintf("%d contributions", record.Count)))
+					return e.EncodeToken(xml.CharData(fmt.Sprintf("%d contributions ", record.Count)))
 				})
 				if err != nil {
 					return nil
 				}
-				return e.EncodeToken(xml.CharData(fmt.Sprintf(" on %s", record.Date.Format("Jan 2, 2006"))))
+				return e.EncodeToken(xml.CharData(fmt.Sprintf("on %s", record.Date.Format("Jan 2, 2006"))))
 			},
 		)
 	})
