@@ -342,7 +342,7 @@ func (g *ContributionGraph) renderOverallContributions(e *xml.Encoder, location 
 				},
 			},
 		}, func(e *xml.Encoder) error {
-			return e.EncodeToken(xml.CharData(fmt.Sprintf("%d contributions ", count)))
+			return e.EncodeToken(xml.CharData(fmt.Sprintf("%d contributions\u00A0", count)))
 		})
 		if err != nil {
 			return nil
@@ -652,7 +652,7 @@ func (w weekSlice) renderTooltip(e *xml.Encoder, location image.Point, tipPositi
 						},
 					},
 				}, func(e *xml.Encoder) error {
-					return e.EncodeToken(xml.CharData(fmt.Sprintf("%d contributions ", record.Count)))
+					return e.EncodeToken(xml.CharData(fmt.Sprintf("%d contributions\u00A0", record.Count)))
 				})
 				if err != nil {
 					return nil
