@@ -47,3 +47,41 @@ var _ = Describe("Taking elements", func() {
 		})
 	})
 })
+
+var _ = Describe("Finding the maximum element", func() {
+	Context("from a non-empty array", func() {
+		comp := func(a, b int) int {
+			return a - b
+		}
+		When("there is a single maximum element", func() {
+			arr := []int{1, 2, 4, 2}
+			It("returns an this element", func() {
+				Expect(max(arr, comp)).To(Equal(4))
+			})
+		})
+		When("there are multiple maximum elements", func() {
+			arr := []int{1, 3, 3, 2}
+			It("returns on of these element", func() {
+				Expect(max(arr, comp)).To(Equal(3))
+			})
+		})
+	})
+})
+
+var _ = Describe("Getting the keys of a map", func() {
+	When("the map is not empty", func() {
+		m := map[int]int{
+			1: 101,
+			2: 102,
+		}
+		It("returns the keys", func() {
+			Expect(Keys(m)).To(Equal([]int{1, 2}))
+		})
+	})
+	When("the map is empty", func() {
+		m := map[int]int{}
+		It("returns an empty array", func() {
+			Expect(Keys(m)).To(Equal([]int{}))
+		})
+	})
+})
