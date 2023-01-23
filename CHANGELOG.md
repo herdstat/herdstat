@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/herdstat/herdstat/compare/v0.4.1...v0.5.0) (2023-01-23)
+
+
+### Features
+
+* support custom primary color for contribution graph ([7636799](https://github.com/herdstat/herdstat/commit/7636799045723f5aee5dbe5e4e8d7eb7af1905c8))
+
 ## [0.4.1](https://github.com/herdstat/herdstat/compare/v0.4.0...v0.4.1) (2023-01-10)
 
 
