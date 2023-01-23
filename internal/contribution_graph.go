@@ -49,13 +49,6 @@ func GetColoring(highest color.RGBA) Coloring {
 	}
 }
 
-// GitHubColoring uses the colors used by GitHub contribution charts.
-var GitHubColoring = GetColoring(color.RGBA{
-	R: 57,
-	G: 211,
-	B: 82,
-})
-
 func defaultColoring(highest color.RGBA, intensity uint8) color.RGBA {
 	m := func(a uint8, b uint8) uint8 {
 		// TODO Get rid of float64?
@@ -87,11 +80,11 @@ type ContributionGraph struct {
 }
 
 // NewContributionMap creates a new ContributionGraph.
-func NewContributionMap(data []ContributionRecord, lastDate time.Time) *ContributionGraph {
+func NewContributionMap(data []ContributionRecord, lastDate time.Time, coloring Coloring) *ContributionGraph {
 	return &ContributionGraph{
 		data,
 		lastDate,
-		GitHubColoring,
+		coloring,
 	}
 }
 

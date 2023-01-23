@@ -29,3 +29,6 @@ contribution-graph:
 
   # Whether the output SVG should be minified
   minify: true
+
+  # The primary color used for coloring daily contribution cells (hex-encoded RGB without leading '#')
+  color: 39D352

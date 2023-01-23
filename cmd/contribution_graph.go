@@ -13,6 +13,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"github.com/araddon/dateparse"
+	"github.com/icza/gox/imagex/colorx"
 	"github.com/mattn/go-sqlite3"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/repeale/fp-go"
@@ -36,6 +37,8 @@ const (
 	minifyOutputCfgKey = "contribution-graph.minify"
 	// The name of the output SVG file
 	filenameCfgKey = "contribution-graph.filename"
+	// The primary color used to color the daily contribution cells
+	colorCfgKey = "contribution.graph.color"
 	// The date of the last day to visualize
 	untilCfgKey = "until"
 )
@@ -124,6 +127,13 @@ func getUntilDate() (time.Time, error) {
 }
 
 func run(cmd *cobra.Command, args []string) error {
+
+	colorStr := viper.GetString(colorCfgKey)
+	color, err := colorx.ParseHexColor(fmt.Sprintf("#%s", colorStr))
+	if err != nil {
+		return fmt.Errorf("invalid color specification '%s': %w", colorStr, err)
+	}
+
 	db, err := sql.Open(DbDriverName, ":memory:")
 	if err != nil {
 		return fmt.Errorf("failed to open database: %w", err)
@@ -196,7 +206,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 	var buf bytes.Buffer
 	enc := xml.NewEncoder(&buf)
-	am := NewContributionMap(data, lastDay)
+	am := NewContributionMap(data, lastDay, GetColoring(color))
 	err = am.Render(enc)
 	if err != nil {
 		return fmt.Errorf("rending SVG failed: %w", err)
@@ -240,7 +250,7 @@ func init() {
 		untilFlag,
 		"u",
 		time.Now().Format("2006-01-02"),
-		"date of last day for which data is visualized")
+		"Date of last day for which data is visualized")
 	if err := viper.BindPFlag(untilCfgKey, contributionGraphCmd.Flags().Lookup(untilFlag)); err != nil {
 		logger.Fatalw("Can't bind to flag", "Flag", untilFlag, "Error", err)
 	}
@@ -254,6 +264,16 @@ func init() {
 		"Flag to toggle SVG document minification")
 	if err := viper.BindPFlag(minifyOutputCfgKey, contributionGraphCmd.Flags().Lookup(minifyOutputFlag)); err != nil {
 		logger.Fatalw("Can't bind to flag", "Flag", minifyOutputFlag, "Error", err)
+	}
+
+	// Flag to control the primary cell color
+	const colorFlag = "color"
+	contributionGraphCmd.Flags().String(
+		colorFlag,
+		"39D352",
+		"The primary color used for coloring daily contribution cells")
+	if err := viper.BindPFlag(colorCfgKey, contributionGraphCmd.Flags().Lookup(colorFlag)); err != nil {
+		logger.Fatalw("Can't bind to flag", "Flag", colorFlag, "Error", err)
 	}
 
 	const outputFilenameFlag = "output-filename"
