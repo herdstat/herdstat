@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/herdstat/herdstat/compare/v0.5.0...v0.5.1) (2023-01-23)
+
+
+### Bug Fixes
+
+* fix flaky test ([8d591df](https://github.com/herdstat/herdstat/commit/8d591dfe5ef6676d1d5eacee471086eee6137cde))
+
 ## [0.5.0](https://github.com/herdstat/herdstat/compare/v0.4.1...v0.5.0) (2023-01-23)
 
 
