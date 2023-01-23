@@ -10,6 +10,7 @@ package internal
 import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"sort"
 )
 
 var _ = Describe("Taking elements", func() {
@@ -74,8 +75,10 @@ var _ = Describe("Getting the keys of a map", func() {
 			1: 101,
 			2: 102,
 		}
+		k := Keys(m)
+		sort.Ints(k)
 		It("returns the keys", func() {
-			Expect(Keys(m)).To(Equal([]int{1, 2}))
+			Expect(k).To(Equal([]int{1, 2}))
 		})
 	})
 	When("the map is empty", func() {
