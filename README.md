@@ -41,6 +41,7 @@ Alternatively, you can use the [`herdstat` GitHub action](https://github.com/her
 | Analysis Period     | contribution-graph | Controls the period of time to analyze by means of the last day of the 52 week period to look at.                     | `--until`, `-u`           | `contribution-graph/until`    |
 | Minification        | contribution-graph | Whether to minify the generated SVG.                                                                                  | `--minify`, `-m`          | `contribution-graph/minify`   |
 | Output Filename     | contribution-graph | The name of the file used to store the generated contribution graph.                                                  | `--output-filename`, `-o` | `contribution-graph/filename` |
+| Primary Color       | contribution-graph | The primary color used for coloring daily contribution cells (hex-encoded RGB without leading '#').                   | `--color`                 | `contribution-graph/color`    |
 
 ## Building from Source
 
