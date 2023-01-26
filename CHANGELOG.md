@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.2](https://github.com/herdstat/herdstat/compare/v0.5.1...v0.5.2) (2023-01-26)
+
+
+### Bug Fixes
+
+* fix typo in color configuration key ([63fc9fb](https://github.com/herdstat/herdstat/commit/63fc9fb2c530f1398c6616c9539b53a09f936661))
+
 ## [0.5.1](https://github.com/herdstat/herdstat/compare/v0.5.0...v0.5.1) (2023-01-23)
 
 
