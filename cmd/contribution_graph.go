@@ -38,7 +38,7 @@ const (
 	// The name of the output SVG file
 	filenameCfgKey = "contribution-graph.filename"
 	// The primary color used to color the daily contribution cells
-	colorCfgKey = "contribution.graph.color"
+	colorCfgKey = "contribution-graph.color"
 	// The date of the last day to visualize
 	untilCfgKey = "until"
 )
