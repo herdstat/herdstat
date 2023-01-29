@@ -11,13 +11,25 @@ import (
 	"encoding/xml"
 	"fmt"
 	"image"
-	"image/color"
 	"strconv"
+	"strings"
 )
 
-// toHex converts the given RGBA color into its RGB hex representation.
-func toHex(c color.RGBA) string {
-	return fmt.Sprintf("#%02x%02x%02x", c.R, c.G, c.B)
+// cssClassAttr creates a `class` XML attribute with the given array of classes.
+func cssClassAttr(classes ...string) xml.Attr {
+	return xml.Attr{
+		Name: xml.Name{
+			Local: "class",
+		},
+		Value: strings.Join(classes, " "),
+	}
+}
+
+// cssClassAttrs wraps the result of cssClassAttrs into an array of xml.Attr.
+func cssClassAttrs(classes ...string) []xml.Attr {
+	return []xml.Attr{
+		cssClassAttr(classes...),
+	}
 }
 
 // contentProducer emits XML content by using the given xml.Encoder.
@@ -96,20 +108,20 @@ func (t textAnchor) String() string {
 }
 
 // simpleText renders text at the given position using the given textAnchor.
-func simpleText(e *xml.Encoder, location image.Point, fill color.RGBA, anchor textAnchor, content string) error {
-	return text(e, location, fill, anchor, func(e *xml.Encoder) error {
+func simpleText(e *xml.Encoder, location image.Point, anchor textAnchor, attrs []xml.Attr, content string) error {
+	return text(e, location, anchor, attrs, func(e *xml.Encoder) error {
 		return e.EncodeToken(xml.CharData(content))
 	})
 }
 
 // text renders complex text (e.g., that includes tspan elements) at the given
 // position using the given textAnchor.
-func text(e *xml.Encoder, location image.Point, fill color.RGBA, anchor textAnchor, content contentProducer) error {
+func text(e *xml.Encoder, location image.Point, anchor textAnchor, attrs []xml.Attr, content contentProducer) error {
 	return nonEmptyElement(e, xml.StartElement{
 		Name: xml.Name{
 			Local: "text",
 		},
-		Attr: []xml.Attr{
+		Attr: append([]xml.Attr{
 			{
 				Name: xml.Name{
 					Local: "x",
@@ -130,22 +142,16 @@ func text(e *xml.Encoder, location image.Point, fill color.RGBA, anchor textAnch
 			},
 			{
 				Name: xml.Name{
-					Local: "fill",
-				},
-				Value: toHex(fill),
-			},
-			{
-				Name: xml.Name{
 					Local: "text-anchor",
 				},
 				Value: anchor.String(),
 			},
-		},
+		}, attrs...),
 	}, content)
 }
 
 // coloredRoundedRect renders a filled rectangle at the given location.
-func coloredRoundedRect(e *xml.Encoder, location image.Point, color color.RGBA, attrs []xml.Attr) error {
+func coloredRoundedRect(e *xml.Encoder, location image.Point, attrs []xml.Attr) error {
 	allAttrs := []xml.Attr{
 		{
 			Name: xml.Name{
@@ -159,29 +165,26 @@ func coloredRoundedRect(e *xml.Encoder, location image.Point, color color.RGBA, 
 			},
 			Value: strconv.Itoa(location.Y),
 		},
+		// If minified rects with zero or omitted width and height are removed.
+		// See https://github.com/tdewolff/minify/issues/557 for a bug issue on
+		// the minifier library.
 		{
 			Name: xml.Name{
 				Local: "width",
 			},
-			Value: strconv.Itoa(10),
+			Value: "1",
 		},
 		{
 			Name: xml.Name{
 				Local: "height",
 			},
-			Value: strconv.Itoa(10),
+			Value: "1",
 		},
 		{
 			Name: xml.Name{
 				Local: "rx",
 			},
 			Value: strconv.Itoa(2),
-		},
-		{
-			Name: xml.Name{
-				Local: "fill",
-			},
-			Value: toHex(color),
 		},
 	}
 	for _, attr := range attrs {
@@ -192,5 +195,24 @@ func coloredRoundedRect(e *xml.Encoder, location image.Point, color color.RGBA, 
 			Local: "rect",
 		},
 		Attr: allAttrs,
+	})
+}
+
+// style writes the given directives as a HTML `style` tag.
+func style(e *xml.Encoder, directives string) error {
+	return nonEmptyElement(e, xml.StartElement{
+		Name: xml.Name{
+			Local: "style",
+		},
+		Attr: []xml.Attr{
+			{
+				Name: xml.Name{
+					Local: "type",
+				},
+				Value: "text/css",
+			},
+		},
+	}, func(e *xml.Encoder) error {
+		return e.EncodeToken(xml.CharData(directives))
 	})
 }

@@ -1,0 +1,87 @@
+{{- /*
+Copyright (c) 2023 - for information on the respective copyright owner
+see the NOTICE file and/or the repository https://github.com/herdstat/herdstat.
+
+SPDX-License-Identifier: MIT
+ */ -}}
+<style>
+
+    {{- /* Top-level styles */}}
+    svg {
+        font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif;
+    }
+
+    {{- /* Styles that apply regardless of color scheme */}}
+    .herdstat-contribution-graph {
+        --herdstat-contribution-graph-color-cell-border: rgba(27, 31, 35, 0.06);
+    }
+
+    {{- /* Styles that apply in light mode */}}
+    @media (prefers-color-scheme: light) {
+        .herdstat-contribution-graph-var {
+            --herdstat-contribution-graph-color-fg: #24292f;
+        {{ range $idx, $color := .LightColors }}
+            --herdstat-contribution-graph-color-cell-L{{ $idx }}-bg: rgb({{ $color.R }}, {{ $color.G }}, {{ $color.B }});
+        {{- end }}
+            --herdstat-contribution-graph-tooltip-color-bg: rgb(36, 41, 47);
+            --herdstat-contribution-graph-tooltip-color-fg: white;
+        }
+    }
+
+    {{- /* Styles that apply in dark mode */}}
+    @media (prefers-color-scheme: dark) {
+        .herdstat-contribution-graph-var {
+            --herdstat-contribution-graph-color-fg: #adbac7;
+        {{ range $idx, $color := .DarkColors }}
+            --herdstat-contribution-graph-color-cell-L{{ $idx }}-bg: rgb({{ $color.R }}, {{ $color.G }}, {{ $color.B }});
+        {{- end }}
+            --herdstat-contribution-graph-tooltip-color-bg: rgb(99, 111, 122);
+            --herdstat-contribution-graph-tooltip-color-fg: rgb(204, 217, 228);
+        }
+    }
+
+    {{- /* Styles for a text */}}
+    .herdstat-contribution-graph-fg {
+        fill: var(--herdstat-contribution-graph-color-fg);
+    }
+
+    {{- /* Styles for a contribution graph cell (except fill colors) */}}
+    .herdstat-contribution-graph-cell {
+        width: 10px;
+        height: 10px;
+        stroke: var(--herdstat-contribution-graph-color-cell-border);
+    }
+
+    {{- /* Fill colors for contribution graph cells */}}
+    {{ range $idx, $color := .LightColors }}
+    .herdstat-contribution-graph-cell-L{{ $idx }}-bg {
+        fill: var(--herdstat-contribution-graph-color-cell-L{{ $idx }}-bg);
+    }
+    {{- end }}
+
+    {{- /* Styles for tooltip overlay */}}
+    .herdstat-contribution-graph-cell-overlay {
+        width: 10px;
+        height: 10px;
+    }
+
+    {{- /* Tooltip overlay mechanics */}}
+    .herdstat-contribution-graph-cell-tooltip {
+        visibility: hidden;
+        transition: opacity 0.3s;
+    }
+    .herdstat-contribution-graph-cell-overlay:hover + .herdstat-contribution-graph-cell-tooltip {
+        visibility: visible;
+    }
+
+    {{- /* Fill colors for tooltips */}}
+    .herdstat-contribution-graph-cell-tooltip > rect, .herdstat-contribution-graph-cell-tooltip > polygon {
+        fill: var(--herdstat-contribution-graph-tooltip-color-bg);
+    }
+
+    {{- /* Text colors for tooltips */}}
+    .herdstat-contribution-graph-cell-tooltip > text {
+        fill: var(--herdstat-contribution-graph-tooltip-color-fg);
+    }
+
+</style>

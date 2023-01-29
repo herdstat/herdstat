@@ -23,6 +23,7 @@ import (
 	"github.com/tdewolff/minify/v2/svg"
 	. "herdstat/internal"
 	"html/template"
+	"image/color"
 	"io"
 	"net/url"
 	"os"
@@ -126,10 +127,24 @@ func getUntilDate() (time.Time, error) {
 	return date, nil
 }
 
+// getColorScheme constructs a color scheme with spectra going from shades
+// of grey to the given color.
+func getColorScheme(color color.RGBA) ColorScheme {
+	light, _ := colorx.ParseHexColor("#ebedf0")
+	dark, _ := colorx.ParseHexColor("#2d333b")
+	return ColorScheme{Light: ColorSpectrum{
+		Min: light,
+		Max: color,
+	}, Dark: ColorSpectrum{
+		Min: dark,
+		Max: color,
+	}}
+}
+
 func run(cmd *cobra.Command, args []string) error {
 
 	colorStr := viper.GetString(colorCfgKey)
-	color, err := colorx.ParseHexColor(fmt.Sprintf("#%s", colorStr))
+	primaryColor, err := colorx.ParseHexColor(fmt.Sprintf("#%s", colorStr))
 	if err != nil {
 		return fmt.Errorf("invalid color specification '%s': %w", colorStr, err)
 	}
@@ -206,7 +221,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 	var buf bytes.Buffer
 	enc := xml.NewEncoder(&buf)
-	am := NewContributionMap(data, lastDay, GetColoring(color))
+	am := NewContributionMap(data, lastDay, GetColoring(getColorScheme(primaryColor)))
 	err = am.Render(enc)
 	if err != nil {
 		return fmt.Errorf("rending SVG failed: %w", err)

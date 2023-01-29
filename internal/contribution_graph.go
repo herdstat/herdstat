@@ -8,29 +8,19 @@
 package internal
 
 import (
+	"bytes"
+	_ "embed"
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"html/template"
 	"image"
 	"image/color"
 	"math"
 	"strconv"
+	"strings"
 	"time"
 )
-
-// legendTextColor is used for rendering text used in legends.
-var legendTextColor = color.RGBA{
-	R: 176,
-	G: 186,
-	B: 199,
-}
-
-// tooltipTextColor is used for rendering text in tooltips.
-var tooltipTextColor = color.RGBA{
-	R: 207,
-	G: 217,
-	B: 228,
-}
 
 // ContributionRecord contains the activity data for a single day.
 type ContributionRecord struct {
@@ -38,31 +28,45 @@ type ContributionRecord struct {
 	Count int
 }
 
+// ColorSpectrum defines a spectrum of colors given by two colors representing
+// the left and right ends of the spectrum.
+type ColorSpectrum struct {
+	Min color.RGBA
+	Max color.RGBA
+}
+
+// ColorScheme defines a color scheme for contribution graphs.
+type ColorScheme struct {
+	Light ColorSpectrum
+	Dark  ColorSpectrum
+}
+
 // Coloring translates an intensity into a color. It is used to compute the
 // color of graph cells and the legend.
-type Coloring func(intensity uint8) color.RGBA
+type Coloring func(intensity uint8, darkScheme bool) color.RGBA
 
-// GetColoring returns a linear coloring based on a single color.
-func GetColoring(highest color.RGBA) Coloring {
-	return func(intensity uint8) color.RGBA {
-		return defaultColoring(highest, intensity)
+// GetColoring returns a linear coloring based on a single primary color.
+func GetColoring(scheme ColorScheme) Coloring {
+	return func(intensity uint8, darkScheme bool) color.RGBA {
+		var spectrum ColorSpectrum
+		if darkScheme {
+			spectrum = scheme.Dark
+		} else {
+			spectrum = scheme.Light
+		}
+		return defaultColoring(spectrum.Min, spectrum.Max, intensity)
 	}
 }
 
-func defaultColoring(highest color.RGBA, intensity uint8) color.RGBA {
+func defaultColoring(min color.RGBA, max color.RGBA, intensity uint8) color.RGBA {
 	m := func(a uint8, b uint8) uint8 {
 		// TODO Get rid of float64?
 		return a + uint8(math.Round(float64(b)-float64(a))/256.0*float64(intensity))
 	}
-	from := color.RGBA{
-		R: 45,
-		G: 51,
-		B: 59,
-	}
 	return color.RGBA{
-		R: m(from.R, highest.R),
-		G: m(from.G, highest.G),
-		B: m(from.B, highest.B),
+		R: m(min.R, max.R),
+		G: m(min.G, max.G),
+		B: m(min.B, max.B),
 	}
 }
 
@@ -99,6 +103,43 @@ func (g *ContributionGraph) intensity(r ContributionRecord) uint8 {
 	return uint8(255.0 / maxCount * r.Count)
 }
 
+var (
+	// The embedded stylesheet template used for styling the contribution graph.
+	//go:embed contribution-graph.gohtml
+	styleTemplate string
+)
+
+// StyleTemplateParams are the parameters used for rendering the stylesheet template.
+type StyleTemplateParams struct {
+	DarkColors  []color.RGBA
+	LightColors []color.RGBA
+}
+
+// renderStyle writes the styleTemplate to the given decoder.
+func (g *ContributionGraph) renderStyle(e *xml.Encoder) error {
+	tmpl := template.Must(template.New("style").Parse(styleTemplate))
+	var lightColors []color.RGBA
+	for i := uint8(0); i < 255; i++ {
+		lightColors = append(lightColors, g.Coloring(i, false))
+	}
+	var darkColors []color.RGBA
+	for i := uint8(0); i < 255; i++ {
+		darkColors = append(darkColors, g.Coloring(i, true))
+	}
+	params := StyleTemplateParams{
+		DarkColors:  darkColors,
+		LightColors: lightColors,
+	}
+	buf := new(bytes.Buffer)
+	if err := tmpl.Execute(buf, params); err != nil {
+		return err
+	}
+	// Strip away the enclosing `style` tag (required to used via the encoder)
+	styleTagStripped := strings.ReplaceAll(
+		strings.ReplaceAll(buf.String(), "<style>", ""), "</style>", "")
+	return style(e, styleTagStripped)
+}
+
 // Render writes the contribution map to the given xml.Encoder.
 func (g *ContributionGraph) Render(e *xml.Encoder) error {
 
@@ -114,6 +155,7 @@ func (g *ContributionGraph) Render(e *xml.Encoder) error {
 				},
 				Value: "http://www.w3.org/2000/svg",
 			},
+			cssClassAttr("herdstat-contribution-graph", "herdstat-contribution-graph-var"),
 			{
 				Name: xml.Name{
 					Local: "width",
@@ -132,34 +174,9 @@ func (g *ContributionGraph) Render(e *xml.Encoder) error {
 		return err
 	}
 
-	err = nonEmptyElement(e, xml.StartElement{
-		Name: xml.Name{
-			Local: "style",
-		},
-		Attr: []xml.Attr{
-			{
-				Name: xml.Name{
-					Local: "type",
-				},
-				Value: "text/css",
-			},
-		},
-	}, func(e *xml.Encoder) error {
-		style := `
-svg {
-	font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif;
-}
-
-.tooltip {
-	visibility: hidden;
-	transition: opacity 0.3s;
-}
-
-.day:hover + .tooltip {
-	visibility: visible;
-}`
-		return e.EncodeToken(xml.CharData(style))
-	})
+	if err = g.renderStyle(e); err != nil {
+		return err
+	}
 
 	if err = g.renderContributionCellMatrix(e); err != nil {
 		return err
@@ -273,15 +290,15 @@ func (g *ContributionGraph) renderContributionCellMatrix(e *xml.Encoder) error {
 // renderWeekdayAxis renders the y-axis of the heatmap consisting of the days
 // of the week.
 func (g *ContributionGraph) renderWeekdayAxis(e *xml.Encoder) error {
-
+	clsAttrs := cssClassAttrs("herdstat-contribution-graph-fg")
 	err := simpleText(
 		e,
 		image.Point{
 			X: 40,
 			Y: 12 + 9 + 30,
 		},
-		legendTextColor,
 		end,
+		clsAttrs,
 		"Mon",
 	)
 	if err != nil {
@@ -294,8 +311,8 @@ func (g *ContributionGraph) renderWeekdayAxis(e *xml.Encoder) error {
 			X: 40,
 			Y: 36 + 9 + 30,
 		},
-		legendTextColor,
 		end,
+		clsAttrs,
 		"Wed",
 	)
 	if err != nil {
@@ -308,8 +325,8 @@ func (g *ContributionGraph) renderWeekdayAxis(e *xml.Encoder) error {
 			X: 40,
 			Y: 60 + 9 + 30,
 		},
-		legendTextColor,
 		end,
+		clsAttrs,
 		"Fri",
 	)
 	if err != nil {
@@ -321,37 +338,39 @@ func (g *ContributionGraph) renderWeekdayAxis(e *xml.Encoder) error {
 
 // renderOverallContributions renders a label with the overall number of contributions.
 func (g *ContributionGraph) renderOverallContributions(e *xml.Encoder, location image.Point, count int) error {
-	return text(e, location.Add(image.Point{Y: 9}), legendTextColor, start, func(e *xml.Encoder) error {
-		err := nonEmptyElement(e, xml.StartElement{
-			Name: xml.Name{
-				Local: "tspan",
-			},
-			Attr: []xml.Attr{
-				{
-					Name: xml.Name{
-						Local: "font-weight",
-					},
-					Value: "800",
+	return text(e, location.Add(image.Point{Y: 9}), start, cssClassAttrs("herdstat-contribution-graph-fg"),
+		func(e *xml.Encoder) error {
+			err := nonEmptyElement(e, xml.StartElement{
+				Name: xml.Name{
+					Local: "tspan",
 				},
-			},
-		}, func(e *xml.Encoder) error {
-			return e.EncodeToken(xml.CharData(fmt.Sprintf("%d contributions\u00A0", count)))
+				Attr: []xml.Attr{
+					{
+						Name: xml.Name{
+							Local: "font-weight",
+						},
+						Value: "800",
+					},
+				},
+			}, func(e *xml.Encoder) error {
+				return e.EncodeToken(xml.CharData(fmt.Sprintf("%d contributions\u00A0", count)))
+			})
+			if err != nil {
+				return nil
+			}
+			return e.EncodeToken(xml.CharData("in the last year"))
 		})
-		if err != nil {
-			return nil
-		}
-		return e.EncodeToken(xml.CharData("in the last year"))
-	})
 }
 
 // renderLegend renders a legend for decoding contribution intensity
 // indicators.
 func (g *ContributionGraph) renderLegend(e *xml.Encoder, location image.Point) error {
+	clsAttrs := cssClassAttrs("herdstat-contribution-graph-fg")
 	err := simpleText(
 		e,
 		location.Add(image.Point{Y: 9}),
-		legendTextColor,
 		start,
+		clsAttrs,
 		"Less",
 	)
 	if err != nil {
@@ -362,20 +381,9 @@ func (g *ContributionGraph) renderLegend(e *xml.Encoder, location image.Point) e
 		err := coloredRoundedRect(e, image.Point{
 			X: location.X + 29 + i*12,
 			Y: location.Y,
-		}, g.Coloring(uint8(255/4*i)), []xml.Attr{
-			{ // TODO Duplicate
-				Name: xml.Name{
-					Local: "stroke",
-				},
-				Value: "white",
-			},
-			{
-				Name: xml.Name{
-					Local: "stroke-opacity",
-				},
-				Value: "0.05",
-			},
-		})
+		}, cssClassAttrs(
+			"herdstat-contribution-graph-cell",
+			fmt.Sprintf("herdstat-contribution-graph-cell-L%d-bg", uint8(255/4*i))))
 		if err != nil {
 			return err
 		}
@@ -384,8 +392,8 @@ func (g *ContributionGraph) renderLegend(e *xml.Encoder, location image.Point) e
 	err = simpleText(
 		e,
 		location.Add(image.Point{X: 29 + 5*12 + 1, Y: 9}),
-		legendTextColor,
 		start,
+		clsAttrs,
 		"More",
 	)
 	if err != nil {
@@ -452,7 +460,8 @@ func (w weekSlice) render(e *xml.Encoder, overlay bool) error {
 			ta = end
 			dx = 10
 		}
-		err := simpleText(e, image.Point{X: dx, Y: 10}, legendTextColor, ta, w.Date.Format("Jan"))
+		err := simpleText(e, image.Point{X: dx, Y: 10}, ta,
+			cssClassAttrs("herdstat-contribution-graph-fg"), w.Date.Format("Jan"))
 		if err != nil {
 			return err
 		}
@@ -546,9 +555,7 @@ func (w weekSlice) tooltipTrianglePoints(location image.Point, position vertical
 func (w weekSlice) renderTooltip(e *xml.Encoder, location image.Point, tipPosition position, record ContributionRecord) error {
 	return nonEmptyElement(e, xml.StartElement{
 		Name: xml.Name{Local: "g"},
-		Attr: []xml.Attr{
-			{Name: xml.Name{Local: "class"}, Value: "tooltip"},
-		},
+		Attr: cssClassAttrs("herdstat-contribution-graph-cell-tooltip"),
 	}, func(e *xml.Encoder) error {
 		width := 230
 		height := 30
@@ -591,12 +598,6 @@ func (w weekSlice) renderTooltip(e *xml.Encoder, location image.Point, tipPositi
 					},
 					Value: "4",
 				},
-				{
-					Name: xml.Name{
-						Local: "fill",
-					},
-					Value: "#656E7A",
-				},
 			},
 		})
 		if err != nil {
@@ -612,12 +613,6 @@ func (w weekSlice) renderTooltip(e *xml.Encoder, location image.Point, tipPositi
 					},
 					Value: w.tooltipTrianglePoints(location, tipPosition.vertical),
 				},
-				{
-					Name: xml.Name{
-						Local: "fill",
-					},
-					Value: "#656E7A",
-				},
 			},
 		})
 		if err != nil {
@@ -629,8 +624,8 @@ func (w weekSlice) renderTooltip(e *xml.Encoder, location image.Point, tipPositi
 				X: origin.X + width/2,
 				Y: origin.Y + height/2 + 4,
 			},
-			tooltipTextColor,
 			middle,
+			[]xml.Attr{},
 			func(e *xml.Encoder) error {
 				err := nonEmptyElement(e, xml.StartElement{
 					Name: xml.Name{
@@ -660,7 +655,7 @@ func (w weekSlice) renderTooltip(e *xml.Encoder, location image.Point, tipPositi
 // contributions.
 func (w weekSlice) renderDay(e *xml.Encoder, weekIndex uint8, record ContributionRecord, overlay bool) error {
 	y := int(record.Date.Weekday()) * 12
-	col := w.Graph.Coloring(w.Graph.intensity(record))
+	col := w.Graph.intensity(record)
 	var attrs []xml.Attr
 	if overlay {
 		attrs = []xml.Attr{
@@ -670,33 +665,17 @@ func (w weekSlice) renderDay(e *xml.Encoder, weekIndex uint8, record Contributio
 				},
 				Value: "0.0",
 			},
-			{
-				Name: xml.Name{
-					Local: "class",
-				},
-				Value: "day",
-			},
+			cssClassAttr("herdstat-contribution-graph-cell-overlay"),
 		}
 	} else {
-		attrs = []xml.Attr{
-			{
-				Name: xml.Name{
-					Local: "stroke",
-				},
-				Value: "white",
-			},
-			{
-				Name: xml.Name{
-					Local: "stroke-opacity",
-				},
-				Value: "0.05",
-			},
-		}
+		attrs = cssClassAttrs(
+			"herdstat-contribution-graph-cell",
+			fmt.Sprintf("herdstat-contribution-graph-cell-L%d-bg", col))
 	}
 	err := coloredRoundedRect(e, image.Point{
 		X: 0,
 		Y: y,
-	}, col, attrs)
+	}, attrs)
 	if err != nil {
 		return err
 	}
