@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/herdstat/herdstat/compare/v0.5.2...v0.6.0) (2023-01-29)
+
+
+### Features
+
+* add support for light/dark mode ([f95c19e](https://github.com/herdstat/herdstat/commit/f95c19e849724dd158d530d2bfffbb8b90130c80))
+
 ## [0.5.2](https://github.com/herdstat/herdstat/compare/v0.5.1...v0.5.2) (2023-01-26)
 
 
