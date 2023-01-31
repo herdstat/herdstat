@@ -2,6 +2,7 @@
 
 [![stability-wip](https://img.shields.io/badge/stability-wip-lightgrey.svg)](https://github.com/mkenney/software-guides/blob/master/STABILITY-BADGES.md#work-in-progress)
 [![codecov](https://codecov.io/gh/herdstat/herdstat/branch/main/graph/badge.svg?token=GG15UAXAYR)](https://codecov.io/gh/herdstat/herdstat)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/cd018680eedc4f6b88976356cd2647e8)](https://www.codacy.com/gh/herdstat/herdstat/dashboard?utm_source=github.com&utm_medium=referral&utm_content=herdstat/herdstat&utm_campaign=Badge_Grade)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white)](https://conventionalcommits.org)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 
@@ -32,7 +33,7 @@ Alternatively, you can use the [`herdstat` GitHub action](https://github.com/her
 `herdstat` can be configured either by providing arguments to the CLI or by means of a configuration file via the global
 `--config` CLI flag. The list of available configuration options is summarized in the following table:
 
-| Aspect              | Subcommend         | Description                                                                                                           | CLI Flag                  | Configuration Path            |
+| Aspect              | Subcommand         | Description                                                                                                           | CLI Flag                  | Configuration Path            |
 | ------------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------- | ------------------------- | ----------------------------- |
 | Configuration       | -                  | Path to a configuration file (see [reference](.herdstat.reference.yaml)).                                             | `--config`, `-c`          | -                             |
 | Source Repositories | -                  | The comma-delimited list of GitHub repositories to analyze. May be either single repositories or whole organizations. | `--repositories`, `-r`    | `repositories`                |
