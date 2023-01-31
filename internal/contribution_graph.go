@@ -81,14 +81,18 @@ type ContributionGraph struct {
 
 	// Coloring defines the color of the graph cells.
 	Coloring Coloring
+
+	// The number of color levels
+	Levels uint8
 }
 
 // NewContributionMap creates a new ContributionGraph.
-func NewContributionMap(data []ContributionRecord, lastDate time.Time, coloring Coloring) *ContributionGraph {
+func NewContributionMap(data []ContributionRecord, lastDate time.Time, coloring Coloring, levels uint8) *ContributionGraph {
 	return &ContributionGraph{
 		data,
 		lastDate,
 		coloring,
+		levels,
 	}
 }
 
@@ -119,12 +123,12 @@ type StyleTemplateParams struct {
 func (g *ContributionGraph) renderStyle(e *xml.Encoder) error {
 	tmpl := template.Must(template.New("style").Parse(styleTemplate))
 	var lightColors []color.RGBA
-	for i := uint8(0); i < 255; i++ {
-		lightColors = append(lightColors, g.Coloring(i, false))
+	for i := uint8(0); i < g.Levels; i++ {
+		lightColors = append(lightColors, g.Coloring(uint8(uint(i)*255/(uint(g.Levels)-1)), false))
 	}
 	var darkColors []color.RGBA
-	for i := uint8(0); i < 255; i++ {
-		darkColors = append(darkColors, g.Coloring(i, true))
+	for i := uint8(0); i < g.Levels; i++ {
+		darkColors = append(darkColors, g.Coloring(uint8(uint(i)*255/(uint(g.Levels)-1)), true))
 	}
 	params := StyleTemplateParams{
 		DarkColors:  darkColors,
@@ -378,12 +382,13 @@ func (g *ContributionGraph) renderLegend(e *xml.Encoder, location image.Point) e
 	}
 
 	for i := 0; i < 5; i++ {
+		level := (g.Levels - 1) / 4 * uint8(i)
 		err := coloredRoundedRect(e, image.Point{
 			X: location.X + 29 + i*12,
 			Y: location.Y,
 		}, cssClassAttrs(
 			"herdstat-contribution-graph-cell",
-			fmt.Sprintf("herdstat-contribution-graph-cell-L%d-bg", uint8(255/4*i))))
+			fmt.Sprintf("herdstat-contribution-graph-cell-L%d-bg", level)))
 		if err != nil {
 			return err
 		}
@@ -655,7 +660,7 @@ func (w weekSlice) renderTooltip(e *xml.Encoder, location image.Point, tipPositi
 // contributions.
 func (w weekSlice) renderDay(e *xml.Encoder, weekIndex uint8, record ContributionRecord, overlay bool) error {
 	y := int(record.Date.Weekday()) * 12
-	col := w.Graph.intensity(record)
+	col := uint8(math.Min(math.Ceil(float64(w.Graph.intensity(record))/256.0*float64(w.Graph.Levels)), float64(w.Graph.Levels-1)))
 	var attrs []xml.Attr
 	if overlay {
 		attrs = []xml.Attr{

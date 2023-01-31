@@ -32,3 +32,6 @@ contribution-graph:
 
   # The primary color used for coloring daily contribution cells (hex-encoded RGB without leading '#')
   color: 39D352
+
+  # The number of color levels used for coloring contribution cells
+  levels: 5

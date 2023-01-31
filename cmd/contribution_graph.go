@@ -25,6 +25,7 @@ import (
 	"html/template"
 	"image/color"
 	"io"
+	"math"
 	"net/url"
 	"os"
 	"reflect"
@@ -40,6 +41,8 @@ const (
 	filenameCfgKey = "contribution-graph.filename"
 	// The primary color used to color the daily contribution cells
 	colorCfgKey = "contribution-graph.color"
+	// The number of color levels used for coloring contribution cells
+	levelsCfgKey = "contribution-graph.levels"
 	// The date of the last day to visualize
 	untilCfgKey = "until"
 )
@@ -149,6 +152,11 @@ func run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("invalid color specification '%s': %w", colorStr, err)
 	}
 
+	levels := viper.GetUint(levelsCfgKey)
+	if levels < 5 || levels > math.MaxUint8 {
+		return fmt.Errorf("invalid number of color levels; allowed range is [5..%d]", math.MaxUint8)
+	}
+
 	db, err := sql.Open(DbDriverName, ":memory:")
 	if err != nil {
 		return fmt.Errorf("failed to open database: %w", err)
@@ -221,7 +229,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 	var buf bytes.Buffer
 	enc := xml.NewEncoder(&buf)
-	am := NewContributionMap(data, lastDay, GetColoring(getColorScheme(primaryColor)))
+	am := NewContributionMap(data, lastDay, GetColoring(getColorScheme(primaryColor)), uint8(levels))
 	err = am.Render(enc)
 	if err != nil {
 		return fmt.Errorf("rending SVG failed: %w", err)
@@ -289,6 +297,17 @@ func init() {
 		"The primary color used for coloring daily contribution cells")
 	if err := viper.BindPFlag(colorCfgKey, contributionGraphCmd.Flags().Lookup(colorFlag)); err != nil {
 		logger.Fatalw("Can't bind to flag", "Flag", colorFlag, "Error", err)
+	}
+
+	// Flag to control the number of color levels used
+	const levelsFlag = "levels"
+	contributionGraphCmd.Flags().Uint8P(
+		levelsFlag,
+		"l",
+		5,
+		"The number of color levels used for coloring contribution cells")
+	if err := viper.BindPFlag(levelsCfgKey, contributionGraphCmd.Flags().Lookup(levelsFlag)); err != nil {
+		logger.Fatalw("Can't bind to flag", "Flag", levelsFlag, "Error", err)
 	}
 
 	const outputFilenameFlag = "output-filename"
