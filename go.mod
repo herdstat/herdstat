@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
-	github.com/google/go-github/v48 v48.2.0
+	github.com/google/go-github/v50 v50.0.0
 	github.com/icza/gox v0.0.0-20230117093757-93f961aa2755
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/onsi/ginkgo/v2 v2.7.0

@@ -9,10 +9,12 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"encoding/xml"
 	"fmt"
 	"github.com/araddon/dateparse"
+	"github.com/google/go-github/v50/github"
 	"github.com/icza/gox/imagex/colorx"
 	"github.com/mattn/go-sqlite3"
 	_ "github.com/mattn/go-sqlite3"
@@ -101,7 +103,7 @@ LIMIT 365;
 
 // createCommitCountQuery instantiates commitCountQueryTmpl for the given
 // repository URLs.
-func createCommitCountQuery(repos map[url.URL]bool) (string, error) {
+func createCommitCountQuery(repos map[url.URL]*github.Repository) (string, error) {
 	// Translate URLs into strings
 	var s []string
 	for key := range repos {
@@ -163,11 +165,11 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 	defer db.Close()
 
-	urls, err := resolveRepositoryURLs()
+	repositories, err := collectRepositories()
 	if err != nil {
 		return err
 	}
-	l := len(urls)
+	l := len(repositories)
 	var s string
 	switch l {
 	case 1:
@@ -176,9 +178,9 @@ func run(cmd *cobra.Command, args []string) error {
 		s = "repositories"
 	}
 	cmd.Printf("Processing %d %s: %v\n", l, s,
-		strings.Join(fp.Map(func(url url.URL) string { return url.String() })(Keys(urls)), ","))
+		strings.Join(fp.Map(func(url url.URL) string { return url.String() })(Keys(repositories)), ","))
 
-	query, err := createCommitCountQuery(urls)
+	query, err := createCommitCountQuery(repositories)
 	if err != nil {
 		return fmt.Errorf("query construction failed: %w", err)
 	}
@@ -193,6 +195,7 @@ func run(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("parsing 'until' parameter '%s' failed: %w", lastDay, err)
 	}
+
 	data := make([]ContributionRecord, 52*7)
 	for i := 0; i < 52*7; i++ {
 		data[i] = ContributionRecord{
@@ -200,6 +203,11 @@ func run(cmd *cobra.Command, args []string) error {
 			Count: 0,
 		}
 	}
+
+	if err := addIssueRelatedContributions(repositories, lastDay, &data); err != nil {
+		return err
+	}
+
 	var (
 		day     string
 		commits int
@@ -220,11 +228,8 @@ func run(cmd *cobra.Command, args []string) error {
 		if i < 0 {
 			break
 		}
-		data[i] = ContributionRecord{
-			Date:  d,
-			Count: commits,
-		}
-		logger.Debugw("Contribution record created", "Date", d, "Contributions", commits)
+		logger.Debugw("Contribution record updated", "Date", d, "Before", data[i].Count, "Commits", commits)
+		data[i].Count += commits
 	}
 
 	var buf bytes.Buffer
@@ -260,6 +265,41 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 	cmd.Printf("Contribution graph written to '%s'\n", filename)
 
+	return nil
+}
+
+// addIssueRelatedContributions adds opened issues and PRs to the contribution records.
+func addIssueRelatedContributions(repositories map[url.URL]*github.Repository, lastDay time.Time, records *[]ContributionRecord) error {
+	ctx := context.Background()
+	client := github.NewClient(getHTTPClient())
+	for _, repository := range repositories {
+		owner := repository.GetOwner().GetLogin()
+		repo := repository.GetName()
+		opt := &github.IssueListByRepoOptions{
+			Since:       lastDay.AddDate(0, 0, -52*7),
+			State:       "all",
+			ListOptions: github.ListOptions{PerPage: 100},
+		}
+		var allIssues []*github.Issue
+		for {
+			issues, resp, err := client.Issues.ListByRepo(ctx, owner, repo, opt)
+			if err != nil {
+				return err
+			}
+			if resp.StatusCode != 200 {
+				return fmt.Errorf("fetching issues for repo %s/%s failed (Statuscode: %d)", owner, repo, resp.StatusCode)
+			}
+			allIssues = append(allIssues, issues...)
+			if resp.NextPage == 0 {
+				break
+			}
+			opt.Page = resp.NextPage
+		}
+		for _, issue := range allIssues {
+			idx := 52*7 - 1 - DaysBetween(issue.CreatedAt.Time, lastDay)
+			(*records)[idx].Count++
+		}
+	}
 	return nil
 }
 

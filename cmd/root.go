@@ -11,7 +11,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/google/go-github/v48/github"
+	"github.com/google/go-github/v50/github"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -85,24 +85,9 @@ func Execute() {
 // https://github.com/dead-claudia/github-limits for details)
 var ownerOrRepoIdPattern = regexp.MustCompile(fmt.Sprintf("([A-Za-z0-9-]+)(/([A-Za-z0-9_\\.-]+))?"))
 
-// addRepository adds the URL built from the given owner and repository to the
-// given set of URLs.
-func addRepository(owner string, repo string, urls *map[url.URL]bool) error {
-	repoUrl, err := url.Parse(fmt.Sprintf("https://github.com/%s/%s", owner, repo))
-	if err != nil {
-		return err
-	}
-	if _, ok := (*urls)[*repoUrl]; ok {
-		logger.Warnw("Repository is a duplicate - ignoring", "Repository URL", repoUrl.String())
-	} else {
-		(*urls)[*repoUrl] = true
-	}
-	return nil
-}
-
-// addOwnerRepositories fetches all repositories of the given owner and adds
-// their URL to the given set of URLs.
-func addOwnerRepositories(owner string, urls *map[url.URL]bool) error {
+// getHTTPClient returns a http client that uses a GitHub token for authentication
+// if configured through viper.
+func getHTTPClient() *http.Client {
 	var httpClient *http.Client
 	if viper.IsSet(gitHubTokenCfgKey) {
 		token := viper.GetString(gitHubTokenCfgKey)
@@ -113,9 +98,40 @@ func addOwnerRepositories(owner string, urls *map[url.URL]bool) error {
 		httpClient = oauth2.NewClient(ctx, ts)
 		logger.Debug("GitHub token provided - making authenticated API calls")
 	} else {
+		httpClient = http.DefaultClient
 		logger.Debug("No GitHub token provided - making anonymous API calls")
 	}
-	client := github.NewClient(httpClient)
+	return httpClient
+}
+
+// addRepository adds the repository given by repository owner and name to the map of repositories.
+func addRepositoryFromName(owner string, repo string, repositories *map[url.URL]*github.Repository) error {
+	client := github.NewClient(getHTTPClient())
+	repository, _, err := client.Repositories.Get(context.Background(), owner, repo)
+	if err != nil {
+		return err
+	}
+	return addRepository(repository, repositories)
+}
+
+// addRepository adds the given repository to the given map of repositories, if it is not a duplicate.
+func addRepository(repo *github.Repository, repositories *map[url.URL]*github.Repository) error {
+	repoURL, err := url.Parse(repo.GetHTMLURL())
+	if err != nil {
+		return err
+	}
+	if _, ok := (*repositories)[*repoURL]; ok {
+		logger.Warnw("Repository is a duplicate - ignoring", "Repository URL", repoURL.String())
+	} else {
+		(*repositories)[*repoURL] = repo
+	}
+	return nil
+}
+
+// addOwnedRepositories fetches all repositories of the given owner and adds
+// them to the given map.
+func addOwnedRepositories(owner string, repositories *map[url.URL]*github.Repository) error {
+	client := github.NewClient(getHTTPClient())
 	opt := &github.RepositoryListByOrgOptions{Type: "public"}
 	repos, _, err := client.Repositories.ListByOrg(context.Background(), owner, opt)
 	logger.Infow("Fetched repositories from owner", "Owner", owner, "Count", len(repos))
@@ -123,18 +139,18 @@ func addOwnerRepositories(owner string, urls *map[url.URL]bool) error {
 		return err
 	}
 	for _, repo := range repos {
-		if err := addRepository(owner, *repo.Name, urls); err != nil {
+		if err := addRepository(repo, repositories); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-// resolveRepositoryURLs computes the repositories to be analyzed. Performs
+// collectRepositories computes the repositories to be analyzed. Performs
 // expansion of owner entries and deduplication.
-func resolveRepositoryURLs() (map[url.URL]bool, error) {
+func collectRepositories() (map[url.URL]*github.Repository, error) {
 	repos := viper.GetStringSlice(repositoriesCfgKey)
-	urls := make(map[url.URL]bool)
+	repositories := make(map[url.URL]*github.Repository)
 	for _, repo := range repos {
 		matches := ownerOrRepoIdPattern.FindStringSubmatch(repo)
 		if matches == nil {
@@ -142,22 +158,22 @@ func resolveRepositoryURLs() (map[url.URL]bool, error) {
 		}
 		owner := matches[1]
 		if matches[3] == "" {
-			err := addOwnerRepositories(owner, &urls)
+			err := addOwnedRepositories(owner, &repositories)
 			if err != nil {
 				return nil, fmt.Errorf("failed to collect repositories from owner '%s': %w", owner, err)
 			}
 		} else {
 			repository := matches[3]
-			err := addRepository(owner, repository, &urls)
+			err := addRepositoryFromName(owner, repository, &repositories)
 			if err != nil {
 				return nil, fmt.Errorf("failed to add repository '%s': %w", repository, err)
 			}
 		}
 	}
-	if len(urls) == 0 {
+	if len(repositories) == 0 {
 		return nil, errors.New("resolving repositories resulted in empty set")
 	}
-	return urls, nil
+	return repositories, nil
 }
 
 // Initialize the root command.
