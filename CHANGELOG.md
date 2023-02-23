@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.0](https://github.com/herdstat/herdstat/compare/v0.6.0...v0.7.0) (2023-02-05)
+
+
+### Features
+
+* include opened issues and PRs as contributions ([44afbbd](https://github.com/herdstat/herdstat/commit/44afbbd8a019613054ab645ff30b9237d0dda109)), closes [#5](https://github.com/herdstat/herdstat/issues/5)
+* parameterizable 'quantization' of color spectrum ([8d8c143](https://github.com/herdstat/herdstat/commit/8d8c1433045554756e206c586e78ec32d20d1291))
+
 ## [0.6.0](https://github.com/herdstat/herdstat/compare/v0.5.2...v0.6.0) (2023-01-29)
 
 
