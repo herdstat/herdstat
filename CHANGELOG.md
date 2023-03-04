@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.0](https://github.com/herdstat/herdstat/compare/v0.7.0...v0.8.0) (2023-03-04)
+
+
+### Features
+
+* remove dependency on mergestat and use go-git instead ([#37](https://github.com/herdstat/herdstat/issues/37)) ([4b697fd](https://github.com/herdstat/herdstat/commit/4b697fdbd4fbdad59bb7503101422485c3390a9b))
+
 ## [0.7.0](https://github.com/herdstat/herdstat/compare/v0.6.0...v0.7.0) (2023-02-05)
 
 
