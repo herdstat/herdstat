@@ -43,16 +43,27 @@ Alternatively, you can use the [`herdstat` GitHub action](https://github.com/her
 | Minification        | contribution-graph | Whether to minify the generated SVG.                                                                                  | `--minify`, `-m`          | `contribution-graph/minify`   |
 | Output Filename     | contribution-graph | The name of the file used to store the generated contribution graph.                                                  | `--output-filename`, `-o` | `contribution-graph/filename` |
 | Primary Color       | contribution-graph | The primary color used for coloring daily contribution cells (hex-encoded RGB without leading '#').                   | `--color`                 | `contribution-graph/color`    |
+| Levels              | contribution-graph | The number of color levels used in the contribution graph.                                                            | `--levels`                | `contribution-graph/levels`   |
 
 ## Building from Source
 
-The easiest way to build `herdstat` from its sources is to use Docker. To build the image invoke
+You can build `herdstat` by invoking
+
+```shell
+git clone https://github.com/herdstat/herdstat.git
+cd herdstat
+go build
+```
+
+### Using Docker
+
+Instead of using golang tooling, you can build `herdstat` from its sources using Docker. To build the image invoke
 
 ```shell
 docker build . -t herdstat-dev
 ```
 
-You can execute `herdstat` on the _herdstat_ GitHub organization using
+You can execute `herdstat`, e.g., on the _herdstat_ GitHub organization, using
 
 ```shell
 docker rm herdstat-dev || true

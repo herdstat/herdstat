@@ -10,27 +10,26 @@ package cmd
 import (
 	"bytes"
 	"context"
-	"database/sql"
 	"encoding/xml"
 	"fmt"
 	"github.com/araddon/dateparse"
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
+	"github.com/go-git/go-git/v5/storage/memory"
 	"github.com/google/go-github/v50/github"
 	"github.com/icza/gox/imagex/colorx"
-	"github.com/mattn/go-sqlite3"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/repeale/fp-go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tdewolff/minify/v2"
 	"github.com/tdewolff/minify/v2/svg"
 	. "herdstat/internal"
-	"html/template"
 	"image/color"
 	"io"
 	"math"
 	"net/url"
 	"os"
-	"reflect"
 	"strings"
 	"time"
 )
@@ -49,76 +48,12 @@ const (
 	untilCfgKey = "until"
 )
 
-// DbDriverName is the name of the database driver configured to use the
-// mergestat extension.
-const DbDriverName = "sqlite3_with_extensions"
-
-// Register the database driver that uses the mergestat extension.
-func init() {
-	sql.Register(DbDriverName,
-		&sqlite3.SQLiteDriver{
-			Extensions: []string{
-				"libmergestat",
-			},
-		})
-}
-
 // contributionGraphCmd represents the contribution-graph command
 var contributionGraphCmd = &cobra.Command{
 	Use:   "contribution-graph",
 	Short: "Generates a GitHub-style heatmap to visualize contributions",
 	Args:  cobra.NoArgs,
 	RunE:  run,
-}
-
-// tmplHelpers provides helpers for template processing
-var tmplHelpers = template.FuncMap{
-
-	// last is used to check whether the given index references the last
-	// element of the given array.
-	"last": func(i int, a interface{}) bool {
-		return i == reflect.ValueOf(a).Len()-1
-	},
-}
-
-// commitCountQueryTmpl is a template to generate a query for the number of
-// daily commits over a set of repositories.
-//
-//goland:noinspection SqlResolve
-var commitCountQueryTmpl = template.Must(template.New("query").Funcs(tmplHelpers).Parse(`
-SELECT strftime('%Y-%m-%d', author_when) Day, COUNT(*)
-FROM (
-{{- range $i, $e := .}}
-    SELECT *
-    FROM commits('{{$e}}')
-    {{- if not (last $i $)}}
-    UNION
-    {{- end}}
-{{- end}}
-)
-GROUP BY Day
-ORDER BY Day DESC
-LIMIT 365;
-`))
-
-// createCommitCountQuery instantiates commitCountQueryTmpl for the given
-// repository URLs.
-func createCommitCountQuery(repos map[url.URL]*github.Repository) (string, error) {
-	// Translate URLs into strings
-	var s []string
-	for key := range repos {
-		s = append(s, key.String())
-	}
-
-	// Instantiate template
-	buf := new(bytes.Buffer)
-	err := commitCountQueryTmpl.Execute(buf, s)
-	if err != nil {
-		return "", err
-	}
-	query := buf.String()
-	logger.Debugw("Commit count query generated", "Repository URLs", s, "Query", query)
-	return query, nil
 }
 
 // getUntilDate retrieves the "until" parameter as a time.Time instance by
@@ -159,12 +94,6 @@ func run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("invalid number of color levels; allowed range is [5..%d]", math.MaxUint8)
 	}
 
-	db, err := sql.Open(DbDriverName, ":memory:")
-	if err != nil {
-		return fmt.Errorf("failed to open database: %w", err)
-	}
-	defer db.Close()
-
 	repositories, err := collectRepositories()
 	if err != nil {
 		return err
@@ -180,17 +109,6 @@ func run(cmd *cobra.Command, args []string) error {
 	cmd.Printf("Processing %d %s: %v\n", l, s,
 		strings.Join(fp.Map(func(url url.URL) string { return url.String() })(Keys(repositories)), ","))
 
-	query, err := createCommitCountQuery(repositories)
-	if err != nil {
-		return fmt.Errorf("query construction failed: %w", err)
-	}
-
-	rows, err := db.Query(query)
-	if err != nil {
-		return fmt.Errorf("query execution failed: %w", err)
-	}
-	defer rows.Close()
-
 	lastDay, err := getUntilDate()
 	if err != nil {
 		return fmt.Errorf("parsing 'until' parameter '%s' failed: %w", lastDay, err)
@@ -204,32 +122,12 @@ func run(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if err := addIssueRelatedContributions(repositories, lastDay, &data); err != nil {
+	if err := addCommitContributions(repositories, lastDay, &data); err != nil {
 		return err
 	}
 
-	var (
-		day     string
-		commits int
-	)
-	for rows.Next() {
-		err := rows.Scan(&day, &commits)
-		if err != nil {
-			return fmt.Errorf("could not read database record: %w", err)
-		}
-		d, err := time.Parse("2006-01-02", day)
-		if err != nil {
-			return fmt.Errorf("unrecognized date format '%s': %w", day, err)
-		}
-		if d.After(lastDay) {
-			continue
-		}
-		i := 52*7 - 1 - DaysBetween(d, lastDay)
-		if i < 0 {
-			break
-		}
-		logger.Debugw("Contribution record updated", "Date", d, "Before", data[i].Count, "Commits", commits)
-		data[i].Count += commits
+	if err := addIssueRelatedContributions(repositories, lastDay, &data); err != nil {
+		return err
 	}
 
 	var buf bytes.Buffer
@@ -268,6 +166,60 @@ func run(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// addCommitContributions collects commits from the given repositories into the given contribution records.
+func addCommitContributions(repositories map[url.URL]*github.Repository, lastDay time.Time, records *[]ContributionRecord) error {
+	for url, repository := range repositories {
+		logger.Debugw("Analyzing commit history", "repository", url.String())
+		if err := addCommitContributionsForRepo(repository, lastDay, records); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// addCommitContributionsForRepo collects commits from the given repository into the given contribution records.
+func addCommitContributionsForRepo(repository *github.Repository, lastDay time.Time, records *[]ContributionRecord) error {
+
+	var auth *http.BasicAuth
+	if viper.IsSet(gitHubTokenCfgKey) {
+		auth = &http.BasicAuth{
+			Username: "ignore",
+			Password: viper.GetString(gitHubTokenCfgKey),
+		}
+	}
+
+	r, err := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
+		URL:  *repository.CloneURL,
+		Auth: auth,
+	})
+	if err != nil {
+		return err
+	}
+
+	ref, err := r.Head()
+	if err != nil {
+		return err
+	}
+
+	since := lastDay.AddDate(0, 0, -52*7)
+	until := lastDay
+	commits, err := r.Log(&git.LogOptions{From: ref.Hash(), Since: &since, Until: &until})
+	if err != nil {
+		return err
+	}
+
+	err = commits.ForEach(func(c *object.Commit) error {
+		i := 52*7 - 1 - DaysBetween(c.Author.When, lastDay)
+		(*records)[i].Count++
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // addIssueRelatedContributions adds opened issues and PRs to the contribution records.
 func addIssueRelatedContributions(repositories map[url.URL]*github.Repository, lastDay time.Time, records *[]ContributionRecord) error {
 	ctx := context.Background()
@@ -297,6 +249,9 @@ func addIssueRelatedContributions(repositories map[url.URL]*github.Repository, l
 		}
 		for _, issue := range allIssues {
 			idx := 52*7 - 1 - DaysBetween(issue.CreatedAt.Time, lastDay)
+			if idx < 0 {
+				continue
+			}
 			(*records)[idx].Count++
 		}
 	}
