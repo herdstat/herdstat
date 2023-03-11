@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.0](https://github.com/herdstat/herdstat/compare/v0.8.0...v0.9.0) (2023-03-11)
+
+
+### Features
+
+* allow for excluding commits via filters ([311f1e0](https://github.com/herdstat/herdstat/commit/311f1e0d04e89b2514cd5e241a42643bce497455))
+
 ## [0.8.0](https://github.com/herdstat/herdstat/compare/v0.7.0...v0.8.0) (2023-03-04)
 
 
