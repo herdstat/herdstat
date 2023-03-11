@@ -35,3 +35,9 @@ contribution-graph:
 
   # The number of color levels used for coloring contribution cells
   levels: 5
+
+  # Filters used to exclude contributions
+  filters:
+
+    # Filters for commits
+    commits:

@@ -134,7 +134,7 @@ func addOwnedRepositories(owner string, repositories *map[url.URL]*github.Reposi
 	client := github.NewClient(getHTTPClient())
 	opt := &github.RepositoryListByOrgOptions{Type: "public"}
 	repos, _, err := client.Repositories.ListByOrg(context.Background(), owner, opt)
-	logger.Infow("Fetched repositories from owner", "Owner", owner, "Count", len(repos))
+	logger.Debugw("Fetched repositories from owner", "Owner", owner, "Count", len(repos))
 	if err != nil {
 		return err
 	}

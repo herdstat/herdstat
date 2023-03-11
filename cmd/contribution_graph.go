@@ -12,6 +12,8 @@ import (
 	"context"
 	"encoding/xml"
 	"fmt"
+	"github.com/antonmedv/expr"
+	"github.com/antonmedv/expr/vm"
 	"github.com/araddon/dateparse"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
@@ -44,6 +46,8 @@ const (
 	colorCfgKey = "contribution-graph.color"
 	// The number of color levels used for coloring contribution cells
 	levelsCfgKey = "contribution-graph.levels"
+	// The filters used to exclude commits
+	commitFiltersCfgKey = "contribution-graph.filters.commits"
 	// The date of the last day to visualize
 	untilCfgKey = "until"
 )
@@ -208,14 +212,48 @@ func addCommitContributionsForRepo(repository *github.Repository, lastDay time.T
 		return err
 	}
 
+	// Parse commit filters
+	rawFilters := viper.GetStringSlice(commitFiltersCfgKey)
+	var filters []*vm.Program
+	for _, fs := range rawFilters {
+		filter, err := expr.Compile(fs, expr.Env(object.Commit{}), expr.AsBool())
+		if err != nil {
+			return fmt.Errorf("invalid commit filter '%s': %w", fs, err)
+		}
+		filters = append(filters, filter)
+	}
+	if len(filters) != 0 {
+		logger.Debugw("Applying commit filters", "filters", rawFilters)
+	}
+
+	filteredCnt := 0
 	err = commits.ForEach(func(c *object.Commit) error {
-		i := 52*7 - 1 - DaysBetween(c.Author.When, lastDay)
-		(*records)[i].Count++
+
+		// Apply commit filters
+		filtered := false
+		for _, filter := range filters {
+			result, err := expr.Run(filter, *c)
+			if err != nil {
+				return fmt.Errorf("failed to apply filter '%v': %w", filter, err)
+			}
+			if result.(bool) {
+				filtered = true
+				break
+			}
+		}
+
+		if !filtered {
+			i := 52*7 - 1 - DaysBetween(c.Author.When, lastDay)
+			(*records)[i].Count++
+		} else {
+			filteredCnt++
+		}
 		return nil
 	})
 	if err != nil {
 		return err
 	}
+	logger.Debugw("Filtered commits", "count", filteredCnt)
 
 	return nil
 }
@@ -303,6 +341,16 @@ func init() {
 		"The number of color levels used for coloring contribution cells")
 	if err := viper.BindPFlag(levelsCfgKey, contributionGraphCmd.Flags().Lookup(levelsFlag)); err != nil {
 		logger.Fatalw("Can't bind to flag", "Flag", levelsFlag, "Error", err)
+	}
+
+	// Flag to control commit filters used to exclude them from the contributions
+	const commitFiltersFlag = "commit-filters"
+	contributionGraphCmd.Flags().StringSlice(
+		commitFiltersFlag,
+		[]string{},
+		"Filters used to exclude commits")
+	if err := viper.BindPFlag(commitFiltersCfgKey, contributionGraphCmd.Flags().Lookup(commitFiltersFlag)); err != nil {
+		logger.Fatalw("Can't bind to flag", "Flag", commitFiltersFlag, "Error", err)
 	}
 
 	const outputFilenameFlag = "output-filename"

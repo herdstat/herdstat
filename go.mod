@@ -3,6 +3,7 @@ module herdstat
 go 1.19
 
 require (
+	github.com/antonmedv/expr v1.12.3
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/go-git/go-git/v5 v5.6.0
 	github.com/google/go-github/v50 v50.0.0
