@@ -117,6 +117,9 @@ func run(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("parsing 'until' parameter '%s' failed: %w", lastDay, err)
 	}
+	logger.Debugw("Analyzing contributions",
+		"from", lastDay.AddDate(0, 0, -52*7+1),
+		"until", lastDay)
 
 	data := make([]internal.ContributionRecord, 52*7)
 	for i := 0; i < 52*7; i++ {
