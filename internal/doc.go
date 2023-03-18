@@ -5,13 +5,6 @@
  * SPDX-License-Identifier: MIT
  */
 
-// Package main contains the entrypoint into the herdstat CLI implementation.
-package main
-
-import (
-	"herdstat/cmd"
-)
-
-func main() {
-	cmd.Execute()
-}
+// Package internal contains all internal herdstat code including contribution
+// graph, svg rendering, and utility classes for dealing with dates and collections.
+package internal

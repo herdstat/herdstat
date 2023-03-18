@@ -26,7 +26,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/tdewolff/minify/v2"
 	"github.com/tdewolff/minify/v2/svg"
-	. "herdstat/internal"
+	"herdstat/internal"
 	"image/color"
 	"io"
 	"math"
@@ -73,13 +73,13 @@ func getUntilDate() (time.Time, error) {
 
 // getColorScheme constructs a color scheme with spectra going from shades
 // of grey to the given color.
-func getColorScheme(color color.RGBA) ColorScheme {
+func getColorScheme(color color.RGBA) internal.ColorScheme {
 	light, _ := colorx.ParseHexColor("#ebedf0")
 	dark, _ := colorx.ParseHexColor("#2d333b")
-	return ColorScheme{Light: ColorSpectrum{
+	return internal.ColorScheme{Light: internal.ColorSpectrum{
 		Min: light,
 		Max: color,
-	}, Dark: ColorSpectrum{
+	}, Dark: internal.ColorSpectrum{
 		Min: dark,
 		Max: color,
 	}}
@@ -111,16 +111,16 @@ func run(cmd *cobra.Command, args []string) error {
 		s = "repositories"
 	}
 	cmd.Printf("Processing %d %s: %v\n", l, s,
-		strings.Join(fp.Map(func(url url.URL) string { return url.String() })(Keys(repositories)), ","))
+		strings.Join(fp.Map(func(url url.URL) string { return url.String() })(internal.Keys(repositories)), ","))
 
 	lastDay, err := getUntilDate()
 	if err != nil {
 		return fmt.Errorf("parsing 'until' parameter '%s' failed: %w", lastDay, err)
 	}
 
-	data := make([]ContributionRecord, 52*7)
+	data := make([]internal.ContributionRecord, 52*7)
 	for i := 0; i < 52*7; i++ {
-		data[i] = ContributionRecord{
+		data[i] = internal.ContributionRecord{
 			Date:  lastDay.AddDate(0, 0, -(52*7 - 1 - i)),
 			Count: 0,
 		}
@@ -136,7 +136,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 	var buf bytes.Buffer
 	enc := xml.NewEncoder(&buf)
-	am := NewContributionMap(data, lastDay, GetColoring(getColorScheme(primaryColor)), uint8(levels))
+	am := internal.NewContributionMap(data, lastDay, internal.GetColoring(getColorScheme(primaryColor)), uint8(levels))
 	err = am.Render(enc)
 	if err != nil {
 		return fmt.Errorf("rending SVG failed: %w", err)
@@ -171,7 +171,7 @@ func run(cmd *cobra.Command, args []string) error {
 }
 
 // addCommitContributions collects commits from the given repositories into the given contribution records.
-func addCommitContributions(repositories map[url.URL]*github.Repository, lastDay time.Time, records *[]ContributionRecord) error {
+func addCommitContributions(repositories map[url.URL]*github.Repository, lastDay time.Time, records *[]internal.ContributionRecord) error {
 	for url, repository := range repositories {
 		logger.Debugw("Analyzing commit history", "repository", url.String())
 		if err := addCommitContributionsForRepo(repository, lastDay, records); err != nil {
@@ -182,7 +182,7 @@ func addCommitContributions(repositories map[url.URL]*github.Repository, lastDay
 }
 
 // addCommitContributionsForRepo collects commits from the given repository into the given contribution records.
-func addCommitContributionsForRepo(repository *github.Repository, lastDay time.Time, records *[]ContributionRecord) error {
+func addCommitContributionsForRepo(repository *github.Repository, lastDay time.Time, records *[]internal.ContributionRecord) error {
 
 	var auth *http.BasicAuth
 	if viper.IsSet(gitHubTokenCfgKey) {
@@ -243,7 +243,7 @@ func addCommitContributionsForRepo(repository *github.Repository, lastDay time.T
 		}
 
 		if !filtered {
-			i := 52*7 - 1 - DaysBetween(c.Author.When, lastDay)
+			i := 52*7 - 1 - internal.DaysBetween(c.Author.When, lastDay)
 			(*records)[i].Count++
 		} else {
 			filteredCnt++
@@ -259,7 +259,7 @@ func addCommitContributionsForRepo(repository *github.Repository, lastDay time.T
 }
 
 // addIssueRelatedContributions adds opened issues and PRs to the contribution records.
-func addIssueRelatedContributions(repositories map[url.URL]*github.Repository, lastDay time.Time, records *[]ContributionRecord) error {
+func addIssueRelatedContributions(repositories map[url.URL]*github.Repository, lastDay time.Time, records *[]internal.ContributionRecord) error {
 	ctx := context.Background()
 	client := github.NewClient(getHTTPClient())
 	for _, repository := range repositories {
@@ -286,7 +286,7 @@ func addIssueRelatedContributions(repositories map[url.URL]*github.Repository, l
 			opt.Page = resp.NextPage
 		}
 		for _, issue := range allIssues {
-			idx := 52*7 - 1 - DaysBetween(issue.CreatedAt.Time, lastDay)
+			idx := 52*7 - 1 - internal.DaysBetween(issue.CreatedAt.Time, lastDay)
 			if idx < 0 {
 				continue
 			}

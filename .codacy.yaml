@@ -1,0 +1,4 @@
+---
+exclude_paths:
+  - "commitlint.config.js"
+  - "CHANGELOG.md"

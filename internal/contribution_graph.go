@@ -438,11 +438,11 @@ func newWeekSlice(graph *ContributionGraph, refDate time.Time, first time.Weekda
 		return nil, errors.New("reference day must be a sunday")
 	}
 	if first != time.Sunday && last != time.Saturday {
-		return nil, errors.New(fmt.Sprintf("either first must be %s or last must be %s", time.Sunday, time.Saturday))
+		return nil, fmt.Errorf("either first must be %s or last must be %s", time.Sunday, time.Saturday)
 	}
 	expectedRecordCount := int(last - first + 1)
 	if len(records) != expectedRecordCount {
-		return nil, errors.New(fmt.Sprintf("wrong number of records, was %d but must be %d", len(records), expectedRecordCount))
+		return nil, fmt.Errorf("wrong number of records, was %d but must be %d", len(records), expectedRecordCount)
 	}
 	return &weekSlice{
 		graph, refDate, first, last, records, index,

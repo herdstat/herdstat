@@ -83,7 +83,7 @@ func Execute() {
 
 // Matches GitHub owner or repository identifiers (see
 // https://github.com/dead-claudia/github-limits for details)
-var ownerOrRepoIdPattern = regexp.MustCompile(fmt.Sprintf("([A-Za-z0-9-]+)(/([A-Za-z0-9_\\.-]+))?"))
+var ownerOrRepoIDPattern = regexp.MustCompile(fmt.Sprintf("([A-Za-z0-9-]+)(/([A-Za-z0-9_\\.-]+))?"))
 
 // getHTTPClient returns a http client that uses a GitHub token for authentication
 // if configured through viper.
@@ -152,7 +152,7 @@ func collectRepositories() (map[url.URL]*github.Repository, error) {
 	repos := viper.GetStringSlice(repositoriesCfgKey)
 	repositories := make(map[url.URL]*github.Repository)
 	for _, repo := range repos {
-		matches := ownerOrRepoIdPattern.FindStringSubmatch(repo)
+		matches := ownerOrRepoIDPattern.FindStringSubmatch(repo)
 		if matches == nil {
 			return nil, fmt.Errorf("'%s' is not a valid owner or owner/repository", repo)
 		}

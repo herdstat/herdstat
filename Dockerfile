@@ -26,6 +26,6 @@ WORKDIR /app
 RUN go build
 
 # Now copy it into our base image.
-FROM gcr.io/distroless/base-debian11
+FROM gcr.io/distroless/base-debian11:nonroot
 
 COPY --from=build /app/herdstat /go/bin/dlv* /
