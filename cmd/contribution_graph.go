@@ -246,7 +246,7 @@ func addCommitContributionsForRepo(repository *github.Repository, lastDay time.T
 		}
 
 		if !filtered {
-			i := 52*7 - 1 - internal.DaysBetween(c.Author.When, lastDay)
+			i := 52*7 - 1 - internal.DaysBetween(c.Committer.When, lastDay)
 			(*records)[i].Count++
 		} else {
 			filteredCnt++
