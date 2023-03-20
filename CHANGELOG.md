@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.9.1](https://github.com/herdstat/herdstat/compare/v0.9.0...v0.9.1) (2023-03-20)
+
+
+### Bug Fixes
+
+* log analysis period on debug level ([ae0d16b](https://github.com/herdstat/herdstat/commit/ae0d16b44d88ba42186eb4dcf1f9179e26f770d9))
+* use commit time instead of author time when analyzing commits ([454109d](https://github.com/herdstat/herdstat/commit/454109d25a2967e5845cef262b6a324553a3ee73))
+
 ## [0.9.0](https://github.com/herdstat/herdstat/compare/v0.8.0...v0.9.0) (2023-03-11)
 
 
