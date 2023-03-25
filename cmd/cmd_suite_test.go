@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: MIT
  */
 
-package internal_test
+package cmd_test
 
 import "testing"
 
@@ -14,7 +14,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestInternal(t *testing.T) {
+func TestCmd(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Internal Suite")
+	RunSpecs(t, "Cmd Suite")
 }

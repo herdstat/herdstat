@@ -11,6 +11,7 @@ import (
 	"github.com/araddon/dateparse"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"time"
 )
 
 var _ = Describe("Computing the previous Sunday", func() {
@@ -32,10 +33,17 @@ var _ = Describe("Computing the previous Sunday", func() {
 })
 
 var _ = Describe("Computing the number of days between two days", func() {
-	When("given the same day", func() {
+	When("given exactly the same date", func() {
 		It("returns 0", func() {
 			day := dateparse.MustParse("2023-01-15")
 			Expect(DaysBetween(day, day)).To(Equal(0))
+		})
+	})
+	When("given the same day with a different hour", func() {
+		It("returns 0", func() {
+			a := dateparse.MustParse("2023-01-15")
+			b := a.Add(23 * time.Hour)
+			Expect(DaysBetween(a, b)).To(Equal(0))
 		})
 	})
 	When("given two different days", func() {

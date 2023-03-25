@@ -61,14 +61,19 @@ var contributionGraphCmd = &cobra.Command{
 }
 
 // getUntilDate retrieves the "until" parameter as a time.Time instance by
-// parsing the respective configuration entry
+// parsing the respective configuration entry. The date is converted to
+// last nanosecond of the day.
 func getUntilDate() (time.Time, error) {
 	s := viper.GetString(untilCfgKey)
 	date, err := dateparse.ParseStrict(s)
 	if err != nil {
 		return time.Time{}, err
 	}
-	return date, nil
+	return time.Date(
+		date.Year(), date.Month(), date.Day(),
+		23, 59, 59,
+		int((1*time.Second).Nanoseconds()-1),
+		date.Location()), nil
 }
 
 // getColorScheme constructs a color scheme with spectra going from shades

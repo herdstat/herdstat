@@ -15,6 +15,7 @@ require (
 	github.com/spf13/viper v1.14.0
 	github.com/tdewolff/minify/v2 v2.12.4
 	go.uber.org/zap v1.21.0
+	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
 	golang.org/x/oauth2 v0.4.0
 )
 
