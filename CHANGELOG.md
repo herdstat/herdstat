@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.2](https://github.com/herdstat/herdstat/compare/v0.9.1...v0.9.2) (2023-03-25)
+
+
+### Bug Fixes
+
+* remove one day off for commits ([ae09201](https://github.com/herdstat/herdstat/commit/ae09201666800ee302348d4fff64b702dc598e07))
+
 ## [0.9.1](https://github.com/herdstat/herdstat/compare/v0.9.0...v0.9.1) (2023-03-20)
 
 
