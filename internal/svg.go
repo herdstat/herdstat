@@ -165,21 +165,6 @@ func coloredRoundedRect(e *xml.Encoder, location image.Point, attrs []xml.Attr) 
 			},
 			Value: strconv.Itoa(location.Y),
 		},
-		// If minified rects with zero or omitted width and height are removed.
-		// See https://github.com/tdewolff/minify/issues/557 for a bug issue on
-		// the minifier library.
-		{
-			Name: xml.Name{
-				Local: "width",
-			},
-			Value: "1",
-		},
-		{
-			Name: xml.Name{
-				Local: "height",
-			},
-			Value: "1",
-		},
 		{
 			Name: xml.Name{
 				Local: "rx",
