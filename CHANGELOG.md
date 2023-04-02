@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.0](https://github.com/herdstat/herdstat/compare/v0.9.2...v0.10.0) (2023-04-02)
+
+
+### Features
+
+* support for version command ([#54](https://github.com/herdstat/herdstat/issues/54)) ([9d49af4](https://github.com/herdstat/herdstat/commit/9d49af45c0fb8a8395b9b22d6acf49db9e24d176))
+
 ## [0.9.2](https://github.com/herdstat/herdstat/compare/v0.9.1...v0.9.2) (2023-03-25)
 
 
