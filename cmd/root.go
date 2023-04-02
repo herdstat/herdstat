@@ -14,6 +14,7 @@ import (
 	"github.com/google/go-github/v50/github"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"go.szostok.io/version/extension"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 	"net/http"
@@ -222,6 +223,12 @@ func init() {
 	if err := viper.BindPFlag(gitHubTokenCfgKey, rootCmd.PersistentFlags().Lookup(gitHubTokenFlag)); err != nil {
 		logger.Fatalw("Can't bind to flag", "Flag", gitHubTokenFlag, "Error", err)
 	}
+
+	rootCmd.AddCommand(
+		extension.NewVersionCobraCmd(
+			extension.WithUpgradeNotice("herdstat", "herdstat"),
+		),
+	)
 
 }
 
