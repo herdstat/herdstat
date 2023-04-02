@@ -8,6 +8,7 @@ require (
 	github.com/go-git/go-git/v5 v5.6.0
 	github.com/google/go-github/v50 v50.0.0
 	github.com/icza/gox v0.0.0-20230117093757-93f961aa2755
+	github.com/migueleliasweb/go-github-mock v0.0.16
 	github.com/onsi/ginkgo/v2 v2.7.0
 	github.com/onsi/gomega v1.24.2
 	github.com/repeale/fp-go v0.11.1
@@ -41,6 +42,7 @@ require (
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/uuid v1.1.2 // indirect
+	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hokaccha/go-prettyjson v0.0.0-20211117102719-0474bc63780f // indirect
