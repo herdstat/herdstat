@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.1](https://github.com/herdstat/herdstat/compare/v0.10.0...v0.10.1) (2023-04-10)
+
+
+### Bug Fixes
+
+* inject version and buildtime using ldflags ([#59](https://github.com/herdstat/herdstat/issues/59)) ([e50ef42](https://github.com/herdstat/herdstat/commit/e50ef4237350758dfca76512be08293a907f45e4))
+
 ## [0.10.0](https://github.com/herdstat/herdstat/compare/v0.9.2...v0.10.0) (2023-04-02)
 
 
