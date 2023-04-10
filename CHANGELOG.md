@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.0](https://github.com/herdstat/herdstat/compare/v0.10.1...v0.11.0) (2023-04-10)
+
+
+### Features
+
+* add installation script ([#61](https://github.com/herdstat/herdstat/issues/61)) ([08ace89](https://github.com/herdstat/herdstat/commit/08ace89b7c7c84706f6bfe5c81193e5c3dd84747))
+
 ## [0.10.1](https://github.com/herdstat/herdstat/compare/v0.10.0...v0.10.1) (2023-04-10)
 
 
