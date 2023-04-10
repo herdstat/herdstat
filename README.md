@@ -18,6 +18,42 @@ organisations.
 which is a well-known Linux command line utility that displays detailed information about files. So replacing _file_
 with _open source community_ (= _herd_) does the trick in understanding why we have chosen that name.
 
+## Installation
+
+`herdstat` has an installer script that will download and install it locally.
+
+You can fetch the script and execute it locally. It's well documented so that you can read through it and understand
+what it is doing before you run it.
+
+```shell
+BRANCH_OR_TAG=main
+curl -fsSL "https://raw.githubusercontent.com/herdstat/herdstat/${BRANCH_OR_TAG}/scripts/get-herdstat.sh"
+chmod 700 get-herdstat.sh
+./get-herdstat.sh
+```
+
+For available options run
+
+```shell
+./get-herdstat.sh --help
+```
+
+If you want to live on the edge, you can run one of the following commands depending on the shell you are using:
+
+### Bash
+
+```shell
+BRANCH_OR_TAG=main
+curl "https://raw.githubusercontent.com/herdstat/herdstat/${BRANCH_OR_TAG}/scripts/get-herdstat.sh" | bash
+```
+
+### Zsh
+
+```shell
+BRANCH_OR_TAG=main
+curl "https://raw.githubusercontent.com/herdstat/herdstat/${BRANCH_OR_TAG}/scripts/get-herdstat.sh" | zsh
+```
+
 ## Usage
 
 You can execute `herdstat` using Docker via
