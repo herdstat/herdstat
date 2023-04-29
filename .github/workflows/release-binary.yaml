@@ -11,6 +11,27 @@ on:
     types:
       - created
 jobs:
+  attach-3rd-party-artifacts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Prepare license obligation artifacts
+        run: |
+          cd ${{ env.WORKING_DIRECTORY }}/3RD-PARTY-LICENSES
+          find . -maxdepth 1 -type d -not -path . | zip -r@ 3rd-party-copyrights
+          find . -iname origin.src | \
+          awk '{ \
+          split($0,b,"/"); \
+          system("xargs < " $0 " curl --create-dirs -Lo ./sources/" b[2] ".zip " $2)}' && \
+          find -regex './sources$' | awk '{system("zip -jr ./3rd-party-sources.zip " $0)}'
+      - name: Update release with license obligations resources
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          artifacts: ${{ env.WORKING_DIRECTORY }}/3RD-PARTY-LICENSES/3rd-party-sources.zip,${{ env.WORKING_DIRECTORY }}/3RD-PARTY-LICENSES/3rd-party-copyrights.zip
+          artifactErrorsFailBuild: true
+          omitBodyDuringUpdate: true
+          omitNameDuringUpdate: true
   releases-matrix:
     runs-on: ubuntu-latest
     strategy:
