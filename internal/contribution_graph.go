@@ -104,7 +104,7 @@ func (g *ContributionGraph) intensity(r ContributionRecord) uint8 {
 	if maxCount == 0 {
 		return 0
 	}
-	return uint8(255.0 / maxCount * r.Count)
+	return uint8((maxCount * r.Count) / 255)
 }
 
 var (
