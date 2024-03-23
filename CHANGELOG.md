@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.1](https://github.com/herdstat/herdstat/compare/v0.11.0...v0.11.1) (2024-03-23)
+
+
+### Bug Fixes
+
+* make contribution graph intensity calculation work for repos with &gt; 255 contributions a day ([#66](https://github.com/herdstat/herdstat/issues/66)) ([82d5856](https://github.com/herdstat/herdstat/commit/82d58565a28b3f9eba3cb3d8c85c6ff6cb72b5c1))
+
 ## [0.11.0](https://github.com/herdstat/herdstat/compare/v0.10.1...v0.11.0) (2023-04-10)
 
 
