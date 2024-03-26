@@ -142,6 +142,10 @@ func run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if err := addPullRequestReviewRelatedContributions(repositories, lastDay, &data); err != nil {
+		return err
+	}
+
 	var buf bytes.Buffer
 	enc := xml.NewEncoder(&buf)
 	am := internal.NewContributionMap(data, lastDay, internal.GetColoring(getColorScheme(primaryColor)), uint8(levels))
@@ -301,6 +305,70 @@ func addIssueRelatedContributions(repositories map[url.URL]*github.Repository, l
 			(*records)[idx].Count++
 		}
 	}
+	return nil
+}
+
+// addPullRequestReviewRelatedContributions adds submitted PR reviews to the contribution records.
+// TODO Extract constants, higher-order function for traversal of paginated requests, split into multiple methods (?), make context a parameter, tests
+func addPullRequestReviewRelatedContributions(repositories map[url.URL]*github.Repository, lastDay time.Time, records *[]internal.ContributionRecord) error {
+	ctx := context.Background()
+	client := github.NewClient(getHTTPClient())
+	var numberOfPrs, numberOfReviews, numberOfMatchingReviews uint
+	for _, repository := range repositories {
+		logger.Debugw("Analyzing PR reviews", "repository", repository.CloneURL)
+		owner := repository.GetOwner().GetLogin()
+		repo := repository.GetName()
+		prOpts := &github.PullRequestListOptions{
+			State:       "all",
+			ListOptions: github.ListOptions{PerPage: 100},
+		}
+		for {
+			prs, resp, err := client.PullRequests.List(ctx, owner, repo, prOpts)
+			if err != nil {
+				return err
+			}
+			if resp.StatusCode != 200 {
+				return fmt.Errorf("fetching PRs for repo %s/%s failed (Statuscode: %d)", owner, repo, resp.StatusCode)
+			}
+			logger.Debugw("Analyzing PRs", "repository", repository.CloneURL, "count", len(prs))
+			for _, pr := range prs {
+				numberOfPrs++
+				reviewOpts := &github.ListOptions{
+					PerPage: 100,
+				}
+				for {
+					reviews, listReviewsResp, err := client.PullRequests.ListReviews(ctx, owner, repo, *pr.Number, reviewOpts)
+					if err != nil {
+						return err
+					}
+					if listReviewsResp.StatusCode != 200 {
+						return fmt.Errorf("fetching reviews for PR #%d of repo %s/%s failed (Statuscode: %d)", pr.Number, owner, repo, resp.StatusCode)
+					}
+					logger.Debugw("Analyzing PR reviews", "repository", repository.CloneURL, "PR", pr.Number, "count", len(reviews))
+					for _, review := range reviews {
+						numberOfReviews++
+						idx := 52*7 - 1 - internal.DaysBetween(review.SubmittedAt.Time, lastDay)
+						match := idx >= 0
+						logger.Debugw("PR review processed", "submitted", review.SubmittedAt.Time, "match", match)
+						if !match {
+							continue
+						}
+						numberOfMatchingReviews++
+						(*records)[idx].Count++
+					}
+					if listReviewsResp.NextPage == 0 {
+						break
+					}
+					reviewOpts.Page = listReviewsResp.NextPage
+				}
+			}
+			if resp.NextPage == 0 {
+				break
+			}
+			prOpts.Page = resp.NextPage
+		}
+	}
+	logger.Debugw("Finished processing all reviews", "PRs", numberOfPrs, "reviews", numberOfReviews, "matching", numberOfMatchingReviews)
 	return nil
 }
 
