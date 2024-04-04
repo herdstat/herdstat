@@ -5,6 +5,9 @@
 # SPDX-License-Identifier: MIT
 #
 
+# Vendor folder
+vendor
+
 # Binaries for programs and plugins
 *.exe
 *.exe~

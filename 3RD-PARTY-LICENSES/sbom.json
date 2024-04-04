@@ -1,0 +1,318 @@
+[
+  {
+    "project": "vendor/gopkg.in/yaml.v3",
+    "license": "Apache-2.0"
+  },
+  {
+    "project": "vendor/gopkg.in/yaml.v2",
+    "license": "Apache-2.0"
+  },
+  {
+    "project": "vendor/gopkg.in/warnings.v0",
+    "license": "BSD-2-Clause"
+  },
+  {
+    "project": "vendor/gopkg.in/ini.v1",
+    "license": "Apache-2.0"
+  },
+  {
+    "project": "vendor/google.golang.org/appengine",
+    "license": "Apache-2.0"
+  },
+  {
+    "project": "vendor/google.golang.org/protobuf",
+    "license": "BSD-3-Clause"
+  },
+  {
+    "project": "vendor/go.uber.org/zap",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/go.uber.org/atomic",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/go.uber.org/multierr",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/golang.org/x/crypto",
+    "license": "BSD-3-Clause"
+  },
+  {
+    "project": "vendor/golang.org/x/net",
+    "license": "BSD-3-Clause"
+  },
+  {
+    "project": "vendor/golang.org/x/oauth2",
+    "license": "BSD-3-Clause"
+  },
+  {
+    "project": "vendor/golang.org/x/sys",
+    "license": "BSD-3-Clause"
+  },
+  {
+    "project": "vendor/golang.org/x/text",
+    "license": "BSD-3-Clause"
+  },
+  {
+    "project": "vendor/golang.org/x/exp",
+    "license": "BSD-3-Clause"
+  },
+  {
+    "project": "vendor/github.com/onsi/gomega",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/onsi/ginkgo/v2",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/mitchellh/copystructure",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/mitchellh/reflectwalk",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/mitchellh/mapstructure",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/pelletier/go-toml",
+    "license": "Apache-2.0"
+  },
+  {
+    "project": "vendor/github.com/pelletier/go-toml/v2",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/jbenet/go-context",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/fsnotify/fsnotify",
+    "license": "BSD-3-Clause"
+  },
+  {
+    "project": "vendor/github.com/huandu/xstrings",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/Masterminds/semver/v3",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/Masterminds/sprig/v3",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/Masterminds/goutils",
+    "license": "Apache-2.0"
+  },
+  {
+    "project": "vendor/github.com/hashicorp/go-version",
+    "license": "MPL-2.0"
+  },
+  {
+    "project": "vendor/github.com/hashicorp/hcl",
+    "license": "MPL-2.0-no-copyleft-exception"
+  },
+  {
+    "project": "vendor/github.com/golang/protobuf",
+    "license": "BSD-3-Clause"
+  },
+  {
+    "project": "vendor/github.com/google/go-querystring",
+    "license": "BSD-3-Clause"
+  },
+  {
+    "project": "vendor/github.com/google/go-cmp",
+    "license": "BSD-3-Clause"
+  },
+  {
+    "project": "vendor/github.com/google/go-github/v50",
+    "license": "BSD-3-Clause"
+  },
+  {
+    "project": "vendor/github.com/google/uuid",
+    "license": "BSD-3-Clause"
+  },
+  {
+    "project": "vendor/github.com/go-logr/logr",
+    "license": "Apache-2.0"
+  },
+  {
+    "project": "vendor/github.com/Microsoft/go-winio",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/shopspring/decimal",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/cloudflare/circl",
+    "license": "BSD-3-Clause"
+  },
+  {
+    "project": "vendor/github.com/sergi/go-diff",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/kevinburke/ssh_config",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/emirpasic/gods",
+    "license": "BSD-2-Clause"
+  },
+  {
+    "project": "vendor/github.com/imdario/mergo",
+    "license": "BSD-3-Clause"
+  },
+  {
+    "project": "vendor/github.com/magiconair/properties",
+    "license": "BSD-2-Clause"
+  },
+  {
+    "project": "vendor/github.com/fatih/color",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/ProtonMail/go-crypto",
+    "license": "BSD-3-Clause"
+  },
+  {
+    "project": "vendor/github.com/muesli/termenv",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/icza/gox",
+    "license": "Apache-2.0"
+  },
+  {
+    "project": "vendor/github.com/pjbgf/sha1cd",
+    "license": "Apache-2.0"
+  },
+  {
+    "project": "vendor/github.com/araddon/dateparse",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/lucasb-eyer/go-colorful",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/tdewolff/minify/v2",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/tdewolff/parse/v2",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/tdewolff/parse/v2/css",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/tdewolff/parse/v2/xml",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/spf13/afero",
+    "license": "Apache-2.0"
+  },
+  {
+    "project": "vendor/github.com/spf13/cast",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/spf13/jwalterweatherman",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/spf13/viper",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/spf13/pflag",
+    "license": "BSD-3-Clause"
+  },
+  {
+    "project": "vendor/github.com/spf13/cobra",
+    "license": "Apache-2.0"
+  },
+  {
+    "project": "vendor/github.com/dustin/go-humanize",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/goccy/go-yaml",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/aymanbagabas/go-osc52",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/hokaccha/go-prettyjson",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/antonmedv/expr",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/xanzy/ssh-agent",
+    "license": "Apache-2.0"
+  },
+  {
+    "project": "vendor/github.com/subosito/gotenv",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/repeale/fp-go",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/inconshreveable/mousetrap",
+    "license": "Apache-2.0"
+  },
+  {
+    "project": "vendor/github.com/rivo/uniseg",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/mattn/go-isatty",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/mattn/go-runewidth",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/mattn/go-colorable",
+    "license": "MIT"
+  },
+  {
+    "project": "vendor/github.com/skeema/knownhosts",
+    "license": "Apache-2.0"
+  },
+  {
+    "project": "vendor/github.com/go-git/gcfg",
+    "license": "BSD-3-Clause"
+  },
+  {
+    "project": "vendor/github.com/go-git/go-billy/v5",
+    "license": "Apache-2.0"
+  },
+  {
+    "project": "vendor/github.com/go-git/go-git/v5",
+    "license": "Apache-2.0"
+  },
+  {
+    "project": "vendor/go.szostok.io/version",
+    "license": "MIT"
+  }
+]
