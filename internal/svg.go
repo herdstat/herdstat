@@ -183,7 +183,7 @@ func coloredRoundedRect(e *xml.Encoder, location image.Point, attrs []xml.Attr) 
 	})
 }
 
-// style writes the given directives as a HTML `style` tag.
+// style writes the given directives as an HTML `style` tag.
 func style(e *xml.Encoder, directives string) error {
 	return nonEmptyElement(e, xml.StartElement{
 		Name: xml.Name{

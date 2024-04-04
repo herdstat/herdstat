@@ -103,7 +103,9 @@ func run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("invalid number of color levels; allowed range is [5..%d]", math.MaxUint8)
 	}
 
-	repositories, err := collectRepositories()
+	repos := viper.GetStringSlice(repositoriesCfgKey)
+	client := github.NewClient(getHTTPClient())
+	repositories, err := collectRepositories(client, repos)
 	if err != nil {
 		return err
 	}

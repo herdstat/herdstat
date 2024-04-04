@@ -84,7 +84,7 @@ func Execute() {
 
 // Matches GitHub owner or repository identifiers (see
 // https://github.com/dead-claudia/github-limits for details)
-var ownerOrRepoIDPattern = regexp.MustCompile(fmt.Sprintf("([A-Za-z0-9-]+)(/([A-Za-z0-9_\\.-]+))?"))
+var ownerOrRepoIDPattern = regexp.MustCompile(fmt.Sprintf("^([A-Za-z0-9-]+)(/([A-Za-z0-9_\\.-]+))?$"))
 
 // getHTTPClient returns a http client that uses a GitHub token for authentication
 // if configured through viper.
@@ -106,8 +106,7 @@ func getHTTPClient() *http.Client {
 }
 
 // addRepository adds the repository given by repository owner and name to the map of repositories.
-func addRepositoryFromName(owner string, repo string, repositories *map[url.URL]*github.Repository) error {
-	client := github.NewClient(getHTTPClient())
+func addRepositoryFromName(client *github.Client, owner string, repo string, repositories *map[url.URL]*github.Repository) error {
 	repository, _, err := client.Repositories.Get(context.Background(), owner, repo)
 	if err != nil {
 		return err
@@ -131,8 +130,7 @@ func addRepository(repo *github.Repository, repositories *map[url.URL]*github.Re
 
 // addOwnedRepositories fetches all repositories of the given owner and adds
 // them to the given map.
-func addOwnedRepositories(owner string, repositories *map[url.URL]*github.Repository) error {
-	client := github.NewClient(getHTTPClient())
+func addOwnedRepositories(client *github.Client, owner string, repositories *map[url.URL]*github.Repository) error {
 	opt := &github.RepositoryListByOrgOptions{Type: "public"}
 	repos, _, err := client.Repositories.ListByOrg(context.Background(), owner, opt)
 	logger.Debugw("Fetched repositories from owner", "Owner", owner, "Count", len(repos))
@@ -149,8 +147,7 @@ func addOwnedRepositories(owner string, repositories *map[url.URL]*github.Reposi
 
 // collectRepositories computes the repositories to be analyzed. Performs
 // expansion of owner entries and deduplication.
-func collectRepositories() (map[url.URL]*github.Repository, error) {
-	repos := viper.GetStringSlice(repositoriesCfgKey)
+func collectRepositories(client *github.Client, repos []string) (map[url.URL]*github.Repository, error) {
 	repositories := make(map[url.URL]*github.Repository)
 	for _, repo := range repos {
 		matches := ownerOrRepoIDPattern.FindStringSubmatch(repo)
@@ -159,13 +156,13 @@ func collectRepositories() (map[url.URL]*github.Repository, error) {
 		}
 		owner := matches[1]
 		if matches[3] == "" {
-			err := addOwnedRepositories(owner, &repositories)
+			err := addOwnedRepositories(client, owner, &repositories)
 			if err != nil {
 				return nil, fmt.Errorf("failed to collect repositories from owner '%s': %w", owner, err)
 			}
 		} else {
 			repository := matches[3]
-			err := addRepositoryFromName(owner, repository, &repositories)
+			err := addRepositoryFromName(client, owner, repository, &repositories)
 			if err != nil {
 				return nil, fmt.Errorf("failed to add repository '%s': %w", repository, err)
 			}
